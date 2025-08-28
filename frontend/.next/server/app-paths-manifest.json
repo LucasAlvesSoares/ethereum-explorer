@@ -1,0 +1,10 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/blocks/page": "app/blocks/page.js",
+  "/blocks/[id]/page": "app/blocks/[id]/page.js",
+  "/addresses/[address]/page": "app/addresses/[address]/page.js",
+  "/page": "app/page.js",
+  "/transaction-flow/page": "app/transaction-flow/page.js",
+  "/transactions/page": "app/transactions/page.js",
+  "/transactions/[hash]/page": "app/transactions/[hash]/page.js"
+}
