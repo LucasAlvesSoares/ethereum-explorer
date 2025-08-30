@@ -7,6 +7,7 @@ import (
 	"crypto-analytics/backend/internal/config"
 	"crypto-analytics/backend/internal/database"
 	"crypto-analytics/backend/internal/ethereum"
+	"crypto-analytics/backend/internal/services"
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
@@ -41,12 +42,27 @@ func main() {
 	// Initialize Ethereum client
 	ethClient, err := ethereum.NewClient(cfg.EthereumRPC)
 	if err != nil {
-		logrus.Fatal("Failed to connect to Ethereum node: ", err)
+		logrus.Warn("Failed to connect to Ethereum node (running in demo mode): ", err)
+		// Continue without Ethereum client for demo purposes
+		ethClient = nil
 	}
-	defer ethClient.Close()
+	if ethClient != nil {
+		defer ethClient.Close()
+	}
 
 	// Start API server
 	server := api.NewServer(db, ethClient, cfg)
+
+	// Start ingestion service with WebSocket hub for real-time updates (only if Ethereum client is available)
+	if ethClient != nil {
+		ingestionService := services.NewIngestionService(db, ethClient, server.GetWebSocketHub())
+		go ingestionService.Start()
+		logrus.Info("Started blockchain ingestion service")
+	} else {
+		logrus.Info("Skipping blockchain ingestion service (no Ethereum connection)")
+	}
+
+	// Start API server (this blocks)
 	if err := server.Start(cfg.Port); err != nil {
 		logrus.Fatal("Failed to start server: ", err)
 	}

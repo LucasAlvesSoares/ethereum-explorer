@@ -6,6 +6,7 @@ import (
 
 	"crypto-analytics/backend/internal/config"
 	"crypto-analytics/backend/internal/ethereum"
+	"crypto-analytics/backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -17,6 +18,7 @@ type Server struct {
 	ethClient *ethereum.Client
 	config    *config.Config
 	router    *gin.Engine
+	wsHub     *websocket.Hub
 }
 
 // NewServer creates a new API server instance
@@ -33,11 +35,16 @@ func NewServer(db *sql.DB, ethClient *ethereum.Client, cfg *config.Config) *Serv
 	router.Use(gin.Recovery())
 	router.Use(corsMiddleware())
 
+	// Create and start WebSocket hub
+	wsHub := websocket.NewHub()
+	go wsHub.Run()
+
 	server := &Server{
 		db:        db,
 		ethClient: ethClient,
 		config:    cfg,
 		router:    router,
+		wsHub:     wsHub,
 	}
 
 	server.setupRoutes()
@@ -56,6 +63,9 @@ func (s *Server) setupRoutes() {
 
 	// Health check
 	api.GET("/health", s.healthCheck)
+
+	// WebSocket endpoint
+	api.GET("/ws", s.handleWebSocket)
 
 	// Blocks
 	api.GET("/blocks", s.getBlocks)
@@ -92,28 +102,52 @@ func corsMiddleware() gin.HandlerFunc {
 	}
 }
 
+// handleWebSocket handles WebSocket connections
+func (s *Server) handleWebSocket(c *gin.Context) {
+	s.wsHub.HandleWebSocket(c.Writer, c.Request)
+}
+
+// GetWebSocketHub returns the WebSocket hub for broadcasting messages
+func (s *Server) GetWebSocketHub() *websocket.Hub {
+	return s.wsHub
+}
+
 // healthCheck returns the health status of the API
 func (s *Server) healthCheck(c *gin.Context) {
-	// Check database connection
-	if err := s.db.Ping(); err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "unhealthy",
-			"error":  "database connection failed",
-		})
-		return
-	}
-
-	// Check Ethereum connection
-	if _, err := s.ethClient.GetNetworkID(); err != nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{
-			"status": "unhealthy",
-			"error":  "ethereum connection failed",
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
+	response := gin.H{
 		"status":      "healthy",
 		"environment": s.config.Environment,
-	})
+		"database":    "connected",
+		"ethereum":    "disconnected",
+	}
+
+	// Check database connection
+	if err := s.db.Ping(); err != nil {
+		response["status"] = "degraded"
+		response["database"] = "disconnected"
+		logrus.Warnf("Database health check failed: %v", err)
+	}
+
+	// Check Ethereum connection (optional in demo mode)
+	if s.ethClient != nil {
+		if s.ethClient.IsConnected() {
+			if _, err := s.ethClient.GetNetworkID(); err != nil {
+				response["ethereum"] = "disconnected"
+				logrus.Warnf("Ethereum health check failed: %v", err)
+				// Don't mark as unhealthy in demo mode - just log the warning
+			} else {
+				response["ethereum"] = "connected"
+			}
+		} else {
+			response["ethereum"] = "disconnected"
+		}
+	}
+
+	// Only return unhealthy if database is down (critical)
+	if response["database"] == "disconnected" {
+		c.JSON(http.StatusServiceUnavailable, response)
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }

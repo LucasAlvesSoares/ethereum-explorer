@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"crypto-analytics/backend/internal/ethereum"
+	"crypto-analytics/backend/internal/websocket"
 
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
@@ -16,15 +17,32 @@ import (
 type IngestionService struct {
 	db        *sql.DB
 	ethClient *ethereum.Client
+	wsHub     *websocket.Hub
 	logger    *logrus.Logger
 }
 
 // NewIngestionService creates a new ingestion service
-func NewIngestionService(db *sql.DB, ethClient *ethereum.Client) *IngestionService {
+func NewIngestionService(db *sql.DB, ethClient *ethereum.Client, wsHub *websocket.Hub) *IngestionService {
 	return &IngestionService{
 		db:        db,
 		ethClient: ethClient,
+		wsHub:     wsHub,
 		logger:    logrus.New(),
+	}
+}
+
+// Start begins the ingestion service with real-time block monitoring
+func (s *IngestionService) Start() {
+	s.logger.Info("Starting blockchain ingestion service...")
+
+	// Start with ingesting a few recent blocks
+	if err := s.IngestLatestBlocks(10); err != nil {
+		s.logger.Errorf("Failed to ingest latest blocks: %v", err)
+	}
+
+	// Start real-time ingestion
+	if err := s.StartRealTimeIngestion(); err != nil {
+		s.logger.Errorf("Real-time ingestion failed: %v", err)
 	}
 }
 
@@ -61,6 +79,9 @@ func (s *IngestionService) IngestBlock(blockNumber *big.Int) error {
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
+
+	// Broadcast new block to WebSocket clients
+	s.broadcastNewBlock(block)
 
 	s.logger.Infof("Successfully ingested block %s with %d transactions",
 		blockNumber.String(), len(block.Transactions()))
@@ -252,8 +273,61 @@ func (s *IngestionService) StartRealTimeIngestion() error {
 
 		if err := s.IngestBlock(header.Number); err != nil {
 			s.logger.Errorf("Failed to ingest new block %s: %v", header.Number.String(), err)
+		} else {
+			// Broadcast network stats update
+			s.broadcastNetworkStats()
 		}
 	}
 
 	return nil
+}
+
+// broadcastNewBlock sends new block information to WebSocket clients
+func (s *IngestionService) broadcastNewBlock(block *types.Block) {
+	if s.wsHub == nil {
+		return
+	}
+
+	timestamp := time.Unix(int64(block.Time()), 0)
+
+	blockUpdate := websocket.BlockUpdate{
+		Number:           block.Number().Int64(),
+		Hash:             block.Hash().Hex(),
+		TransactionCount: len(block.Transactions()),
+		GasUsed:          block.GasUsed(),
+		GasLimit:         block.GasLimit(),
+		Timestamp:        timestamp.Format(time.RFC3339),
+		Miner:            block.Coinbase().Hex(),
+	}
+
+	s.wsHub.BroadcastBlockUpdate(blockUpdate)
+}
+
+// broadcastNetworkStats sends updated network statistics to WebSocket clients
+func (s *IngestionService) broadcastNetworkStats() {
+	if s.wsHub == nil {
+		return
+	}
+
+	// Get latest block number for network stats
+	latestBlockNumber, err := s.ethClient.GetLatestBlockNumber()
+	if err != nil {
+		s.logger.Errorf("Failed to get latest block number for stats: %v", err)
+		return
+	}
+
+	// Get network ID
+	networkID, err := s.ethClient.GetNetworkID()
+	if err != nil {
+		s.logger.Errorf("Failed to get network ID for stats: %v", err)
+		return
+	}
+
+	statsData := map[string]interface{}{
+		"latest_block": latestBlockNumber.String(),
+		"network_id":   networkID.String(),
+		"timestamp":    time.Now().Unix(),
+	}
+
+	s.wsHub.BroadcastNetworkStats(statsData)
 }

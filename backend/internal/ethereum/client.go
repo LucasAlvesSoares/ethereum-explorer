@@ -118,3 +118,8 @@ func (c *Client) IsContract(address common.Address) (bool, error) {
 	}
 	return len(code) > 0, nil
 }
+
+// IsConnected checks if the client has a valid connection
+func (c *Client) IsConnected() bool {
+	return c != nil && c.client != nil
+}

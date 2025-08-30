@@ -149,7 +149,6 @@ CREATE INDEX IF NOT EXISTS idx_blocks_miner ON blocks(miner);
 CREATE INDEX IF NOT EXISTS idx_transactions_block_number ON transactions(block_number);
 CREATE INDEX IF NOT EXISTS idx_transactions_from_address ON transactions(from_address);
 CREATE INDEX IF NOT EXISTS idx_transactions_to_address ON transactions(to_address);
-CREATE INDEX IF NOT EXISTS idx_transactions_timestamp ON transactions((SELECT timestamp FROM blocks WHERE blocks.number = transactions.block_number));
 CREATE INDEX IF NOT EXISTS idx_addresses_balance ON addresses(balance);
 CREATE INDEX IF NOT EXISTS idx_addresses_is_contract ON addresses(is_contract);
 CREATE INDEX IF NOT EXISTS idx_events_address ON events(address);
