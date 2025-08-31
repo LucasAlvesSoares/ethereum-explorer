@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Search, Activity, Blocks, Zap } from 'lucide-react'
+import Link from 'next/link'
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -71,6 +72,44 @@ export default function Home() {
                 API: {apiStatus === 'loading' ? 'Checking...' : apiStatus}
               </span>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Navigation Links */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6 text-center">Explore the Platform</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link href="/blocks" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+            <div className="flex items-center mb-2">
+              <Blocks className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="font-semibold text-gray-800">Latest Blocks</h3>
+            </div>
+            <p className="text-sm text-gray-600">View recent blocks and their details</p>
+          </Link>
+          
+          <Link href="/transactions" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+            <div className="flex items-center mb-2">
+              <Activity className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="font-semibold text-gray-800">Transactions</h3>
+            </div>
+            <p className="text-sm text-gray-600">Explore recent transactions</p>
+          </Link>
+          
+          <Link href="/gas-analytics" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+            <div className="flex items-center mb-2">
+              <Zap className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="font-semibold text-gray-800">Gas Analytics</h3>
+            </div>
+            <p className="text-sm text-gray-600">Real-time gas prices and trends</p>
+          </Link>
+          
+          <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="flex items-center mb-2">
+              <Search className="w-5 h-5 text-gray-400 mr-2" />
+              <h3 className="font-semibold text-gray-400">Address Search</h3>
+            </div>
+            <p className="text-sm text-gray-400">Coming Soon</p>
           </div>
         </div>
       </div>
