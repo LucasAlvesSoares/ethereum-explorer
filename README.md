@@ -9,14 +9,6 @@ A production-ready Ethereum blockchain explorer with advanced analytics capabili
 - **Database**: PostgreSQL
 - **Blockchain**: Ethereum via go-ethereum client
 
-## Development Log
-
-### Cool Discoveries 🚀
-- TBD
-
-### Pain Points 😅
-- TBD
-
 ## Quick Start
 
 ```bash
