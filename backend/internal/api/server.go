@@ -91,6 +91,11 @@ func (s *Server) setupRoutes() {
 	api.GET("/gas/history", s.getGasPriceHistory)
 	api.GET("/gas/calculate", s.calculateGasFee)
 	api.GET("/gas/recommendations", s.getGasPriceRecommendations)
+
+	// Transaction Flow Visualization
+	api.GET("/transaction-flow/:address", s.GetTransactionFlow)
+	api.GET("/address-analytics/:address", s.GetAddressAnalytics)
+	api.GET("/transaction-path", s.GetTransactionPath)
 }
 
 // corsMiddleware handles CORS headers
