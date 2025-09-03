@@ -100,7 +100,7 @@ func (s *Server) getBlocks(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var blocks []Block
+	blocks := make([]Block, 0) // Initialize empty slice instead of nil
 	for rows.Next() {
 		var block Block
 		var baseFeePerGas sql.NullString
@@ -267,7 +267,7 @@ func (s *Server) getTransactions(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var transactions []Transaction
+	transactions := make([]Transaction, 0) // Initialize empty slice instead of nil
 	for rows.Next() {
 		var tx Transaction
 		var toAddress, contractAddress, logsBloom sql.NullString
@@ -494,7 +494,7 @@ func (s *Server) getAddressTransactions(c *gin.Context) {
 	}
 	defer rows.Close()
 
-	var transactions []Transaction
+	transactions := make([]Transaction, 0) // Initialize empty slice instead of nil
 	for rows.Next() {
 		var tx Transaction
 		var toAddress, contractAddress, logsBloom sql.NullString

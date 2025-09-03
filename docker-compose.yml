@@ -44,7 +44,7 @@ services:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://postgres:password@postgres:5432/crypto_analytics?sslmode=disable
-      - ETHEREUM_RPC=https://mainnet.infura.io/v3/YOUR_PROJECT_ID
+      - ETHEREUM_RPC=https://mainnet.infura.io/v3/b6cecb78a94c4755bc603852757d8f62
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=info
       - ENVIRONMENT=local
