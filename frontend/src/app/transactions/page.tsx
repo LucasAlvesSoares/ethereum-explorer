@@ -65,8 +65,8 @@ export default function TransactionsPage() {
       }
       
       const data: TransactionsResponse = await response.json()
-      setTransactions(data.transactions)
-      setPagination(data.pagination)
+      setTransactions(data.transactions || []) // Ensure we always have an array
+      setPagination(data.pagination || { page: 1, limit: 20, total: 0, total_pages: 0 })
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
