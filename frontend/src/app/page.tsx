@@ -269,31 +269,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Network Overview</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">-</div>
-            <div className="text-sm text-gray-600">Latest Block</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">-</div>
-            <div className="text-sm text-gray-600">Gas Price</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">-</div>
-            <div className="text-sm text-gray-600">Network Hash Rate</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-primary-600">-</div>
-            <div className="text-sm text-gray-600">Active Addresses</div>
-          </div>
-        </div>
-        <p className="text-sm text-gray-500 mt-4 text-center">
-          Real-time data will be available once the backend is connected to an Ethereum node
-        </p>
-      </div>
     </div>
   )
 }

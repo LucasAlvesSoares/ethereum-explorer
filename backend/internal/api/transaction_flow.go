@@ -1,13 +1,10 @@
 package api
 
 import (
-	"crypto/rand"
-	"fmt"
-	"math/big"
+	"database/sql"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -45,8 +42,20 @@ func (s *Server) GetTransactionFlow(c *gin.Context) {
 		return
 	}
 
-	// For now, return demo data since we don't have real transaction data yet
-	flowData := generateTransactionFlowDemo(address)
+	// Query real transaction data from database
+	flowData, err := s.getTransactionFlowFromDB(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "No transaction data found for this address",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch transaction data",
+		})
+		return
+	}
 
 	c.JSON(http.StatusOK, flowData)
 }
@@ -68,128 +77,150 @@ func isValidEthereumAddress(address string) bool {
 	return true
 }
 
-// generateTransactionFlowDemo creates realistic demo data for transaction flow visualization
-func generateTransactionFlowDemo(centerAddress string) TransactionFlowData {
-	nodes := []TransactionNode{
-		{
-			ID:      centerAddress,
-			Address: centerAddress,
-			Label:   "Target Address",
-			Value:   100.0,
-			Type:    "address",
-		},
-	}
+// getTransactionFlowFromDB queries the database for real transaction flow data
+func (s *Server) getTransactionFlowFromDB(address string) (TransactionFlowData, error) {
+	// Query transactions where the address is either sender or receiver
+	query := `
+		SELECT DISTINCT 
+			COALESCE(from_address, '') as from_addr,
+			COALESCE(to_address, '') as to_addr,
+			COALESCE(value, '0') as tx_value,
+			hash,
+			created_at
+		FROM transactions 
+		WHERE (from_address = $1 OR to_address = $1)
+		AND from_address IS NOT NULL 
+		AND to_address IS NOT NULL
+		AND from_address != ''
+		AND to_address != ''
+		LIMIT 50
+	`
 
+	rows, err := s.db.Query(query, address)
+	if err != nil {
+		return TransactionFlowData{}, err
+	}
+	defer rows.Close()
+
+	// Track unique addresses and their transaction data
+	addressMap := make(map[string]*TransactionNode)
 	var links []TransactionLink
+	hasData := false
 
-	// Generate connected addresses with realistic patterns
-	connectedAddresses := []struct {
-		address  string
-		label    string
-		addrType string
-		value    float64
-	}{
-		{generateRandomAddress(), "Exchange Hot Wallet", "contract", 250.5},
-		{generateRandomAddress(), "DeFi Protocol", "contract", 180.3},
-		{generateRandomAddress(), "Whale Address", "address", 95.7},
-		{generateRandomAddress(), "Mining Pool", "address", 75.2},
-		{generateRandomAddress(), "DEX Router", "contract", 120.8},
-		{generateRandomAddress(), "User Wallet", "address", 45.1},
-		{generateRandomAddress(), "Arbitrage Bot", "contract", 85.9},
-		{generateRandomAddress(), "Staking Contract", "contract", 200.4},
+	// Add the center address
+	addressMap[address] = &TransactionNode{
+		ID:      address,
+		Address: address,
+		Label:   getAddressLabel(address),
+		Value:   0.0,
+		Type:    getAddressType(address),
 	}
 
-	// Add connected nodes
-	for _, addr := range connectedAddresses {
-		nodes = append(nodes, TransactionNode{
-			ID:      addr.address,
-			Address: addr.address,
-			Label:   addr.label,
-			Value:   addr.value,
-			Type:    addr.addrType,
-		})
-
-		// Create realistic transaction patterns
-		// Incoming transactions (others -> center)
-		if shouldCreateLink(0.7) {
-			links = append(links, TransactionLink{
-				Source:    addr.address,
-				Target:    centerAddress,
-				Value:     randomFloat(0.1, 50.0),
-				Hash:      generateRandomTxHash(),
-				Timestamp: randomTimestamp(),
-			})
+	for rows.Next() {
+		var fromAddr, toAddr, txValue, hash, timestamp string
+		if err := rows.Scan(&fromAddr, &toAddr, &txValue, &hash, &timestamp); err != nil {
+			continue
 		}
 
-		// Outgoing transactions (center -> others)
-		if shouldCreateLink(0.6) {
-			links = append(links, TransactionLink{
-				Source:    centerAddress,
-				Target:    addr.address,
-				Value:     randomFloat(0.05, 25.0),
-				Hash:      generateRandomTxHash(),
-				Timestamp: randomTimestamp(),
-			})
-		}
+		hasData = true
 
-		// Inter-node connections for more complex visualization
-		if shouldCreateLink(0.3) {
-			// Find another random node to connect to
-			for _, otherAddr := range connectedAddresses {
-				if otherAddr.address != addr.address && shouldCreateLink(0.2) {
-					links = append(links, TransactionLink{
-						Source:    addr.address,
-						Target:    otherAddr.address,
-						Value:     randomFloat(0.01, 10.0),
-						Hash:      generateRandomTxHash(),
-						Timestamp: randomTimestamp(),
-					})
-					break // Only create one inter-node connection per node
-				}
+		// Parse transaction value
+		value, _ := strconv.ParseFloat(txValue, 64)
+		// Convert from wei to ETH (assuming value is in wei)
+		ethValue := value / 1e18
+
+		// Add nodes for from and to addresses if not already present
+		if _, exists := addressMap[fromAddr]; !exists {
+			addressMap[fromAddr] = &TransactionNode{
+				ID:      fromAddr,
+				Address: fromAddr,
+				Label:   getAddressLabel(fromAddr),
+				Value:   0.0,
+				Type:    getAddressType(fromAddr),
 			}
 		}
+
+		if _, exists := addressMap[toAddr]; !exists {
+			addressMap[toAddr] = &TransactionNode{
+				ID:      toAddr,
+				Address: toAddr,
+				Label:   getAddressLabel(toAddr),
+				Value:   0.0,
+				Type:    getAddressType(toAddr),
+			}
+		}
+
+		// Update node values based on transaction flow
+		if fromAddr == address {
+			addressMap[address].Value += ethValue // Outgoing
+		} else if toAddr == address {
+			addressMap[address].Value += ethValue // Incoming
+		}
+
+		// Create transaction link
+		links = append(links, TransactionLink{
+			Source:    fromAddr,
+			Target:    toAddr,
+			Value:     ethValue,
+			Hash:      hash,
+			Timestamp: timestamp,
+		})
+	}
+
+	if !hasData {
+		return TransactionFlowData{}, sql.ErrNoRows
+	}
+
+	// Convert map to slice
+	var nodes []TransactionNode
+	for _, node := range addressMap {
+		nodes = append(nodes, *node)
 	}
 
 	return TransactionFlowData{
 		Nodes: nodes,
 		Links: links,
+	}, nil
+}
+
+// getAddressLabel returns a descriptive label for well-known addresses
+func getAddressLabel(address string) string {
+	addressLower := strings.ToLower(address)
+	labels := map[string]string{
+		"0xdac17f958d2ee523a2206206994597c13d831ec7": "USDT Contract",
+		"0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": "Uniswap Token",
+		"0x28c6c06298d514db089934071355e5743bf21d60": "Binance Hot Wallet",
+		"0x6b175474e89094c44da98b954eedeac495271d0f": "DAI Stablecoin",
+		"0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "WETH Contract",
+		"0x7a250d5630b4cf539739df2c5dacb4c659f2488d": "Uniswap V2 Router",
+		"0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad": "Uniswap V3 Router",
 	}
+
+	if label, exists := labels[addressLower]; exists {
+		return label
+	}
+	return ""
 }
 
-// Helper functions for demo data generation
+// getAddressType returns the type (address or contract) for well-known addresses
+func getAddressType(address string) string {
+	addressLower := strings.ToLower(address)
+	contracts := map[string]bool{
+		"0xdac17f958d2ee523a2206206994597c13d831ec7": true, // USDT Contract
+		"0x1f9840a85d5af5bf1d1762f925bdaddc4201f984": true, // Uniswap Token
+		"0x6b175474e89094c44da98b954eedeac495271d0f": true, // DAI Stablecoin
+		"0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": true, // WETH Contract
+		"0x7a250d5630b4cf539739df2c5dacb4c659f2488d": true, // Uniswap V2 Router
+		"0x3fc91a3afd70395cd496c647d5a6cc9d4b2b7fad": true, // Uniswap V3 Router
+	}
 
-func generateRandomAddress() string {
-	bytes := make([]byte, 20)
-	rand.Read(bytes)
-	return fmt.Sprintf("0x%x", bytes)
+	if contracts[addressLower] {
+		return "contract"
+	}
+	return "address"
 }
 
-func generateRandomTxHash() string {
-	bytes := make([]byte, 32)
-	rand.Read(bytes)
-	return fmt.Sprintf("0x%x", bytes)
-}
-
-func randomFloat(min, max float64) float64 {
-	n, _ := rand.Int(rand.Reader, big.NewInt(1000))
-	ratio := float64(n.Int64()) / 1000.0
-	return min + ratio*(max-min)
-}
-
-func shouldCreateLink(probability float64) bool {
-	n, _ := rand.Int(rand.Reader, big.NewInt(100))
-	return float64(n.Int64()) < probability*100
-}
-
-func randomTimestamp() string {
-	// Generate timestamp within last 30 days
-	now := time.Now()
-	randomDays := randomFloat(0, 30)
-	randomTime := now.Add(-time.Duration(randomDays*24) * time.Hour)
-	return randomTime.Format(time.RFC3339)
-}
-
-// GetAddressAnalytics provides additional analytics for an address
+// GetAddressAnalytics provides analytics for an address based on real data
 func (s *Server) GetAddressAnalytics(c *gin.Context) {
 	address := c.Param("address")
 
@@ -200,61 +231,81 @@ func (s *Server) GetAddressAnalytics(c *gin.Context) {
 		return
 	}
 
-	// Generate analytics data
-	analytics := map[string]interface{}{
-		"address":             address,
-		"balance":             randomFloat(0.1, 1000.0),
-		"transaction_count":   randomInt(1, 10000),
-		"first_seen":          randomTimestamp(),
-		"last_seen":           randomTimestamp(),
-		"labels":              generateAddressLabels(),
-		"risk_score":          randomFloat(0.0, 1.0),
-		"activity_pattern":    generateActivityPattern(),
-		"connected_addresses": randomInt(5, 50),
-		"total_volume_in":     randomFloat(10.0, 50000.0),
-		"total_volume_out":    randomFloat(5.0, 45000.0),
+	// Query real analytics from database
+	analytics, err := s.getAddressAnalyticsFromDB(address)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "No data found for this address",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to fetch address analytics",
+		})
+		return
 	}
 
 	c.JSON(http.StatusOK, analytics)
 }
 
-func randomInt(min, max int) int {
-	n, _ := rand.Int(rand.Reader, big.NewInt(int64(max-min)))
-	return min + int(n.Int64())
+// getAddressAnalyticsFromDB queries real analytics data from the database
+func (s *Server) getAddressAnalyticsFromDB(address string) (map[string]interface{}, error) {
+	// Query transaction statistics
+	query := `
+		SELECT 
+			COUNT(*) as transaction_count,
+			COALESCE(SUM(CASE WHEN from_address = $1 THEN CAST(value AS NUMERIC) ELSE 0 END), 0) as total_sent,
+			COALESCE(SUM(CASE WHEN to_address = $1 THEN CAST(value AS NUMERIC) ELSE 0 END), 0) as total_received,
+			MIN(created_at) as first_seen,
+			MAX(created_at) as last_seen
+		FROM transactions 
+		WHERE from_address = $1 OR to_address = $1
+	`
+
+	var txCount int64
+	var totalSent, totalReceived string
+	var firstSeen, lastSeen sql.NullString
+
+	err := s.db.QueryRow(query, address).Scan(&txCount, &totalSent, &totalReceived, &firstSeen, &lastSeen)
+	if err != nil {
+		return nil, err
+	}
+
+	if txCount == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	// Convert values from wei to ETH
+	sentFloat, _ := strconv.ParseFloat(totalSent, 64)
+	receivedFloat, _ := strconv.ParseFloat(totalReceived, 64)
+	sentETH := sentFloat / 1e18
+	receivedETH := receivedFloat / 1e18
+
+	analytics := map[string]interface{}{
+		"address":           address,
+		"transaction_count": txCount,
+		"total_volume_out":  sentETH,
+		"total_volume_in":   receivedETH,
+		"net_flow":          receivedETH - sentETH,
+		"labels":            []string{getAddressLabel(address)},
+		"type":              getAddressType(address),
+	}
+
+	if firstSeen.Valid {
+		analytics["first_seen"] = firstSeen.String
+	}
+	if lastSeen.Valid {
+		analytics["last_seen"] = lastSeen.String
+	}
+
+	return analytics, nil
 }
 
-func generateAddressLabels() []string {
-	possibleLabels := []string{
-		"Exchange", "DeFi Protocol", "Mining Pool", "Whale",
-		"Bot", "MEV", "Arbitrage", "Staking", "Bridge", "DAO",
-	}
-
-	numLabels := randomInt(0, 3)
-	if numLabels == 0 {
-		return []string{}
-	}
-
-	labels := make([]string, numLabels)
-	for i := 0; i < numLabels; i++ {
-		labels[i] = possibleLabels[randomInt(0, len(possibleLabels))]
-	}
-	return labels
-}
-
-func generateActivityPattern() map[string]interface{} {
-	return map[string]interface{}{
-		"most_active_hour":     randomInt(0, 23),
-		"most_active_day":      []string{"Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"}[randomInt(0, 7)],
-		"avg_tx_per_day":       randomFloat(0.1, 100.0),
-		"peak_activity_period": "2024-01-15 to 2024-02-15",
-	}
-}
-
-// GetTransactionPath finds the shortest path between two addresses
+// GetTransactionPath finds connections between two addresses (simplified implementation)
 func (s *Server) GetTransactionPath(c *gin.Context) {
 	fromAddress := c.Query("from")
 	toAddress := c.Query("to")
-	maxHops := c.DefaultQuery("max_hops", "6")
 
 	if !isValidEthereumAddress(fromAddress) || !isValidEthereumAddress(toAddress) {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -263,69 +314,57 @@ func (s *Server) GetTransactionPath(c *gin.Context) {
 		return
 	}
 
-	maxHopsInt, err := strconv.Atoi(maxHops)
-	if err != nil || maxHopsInt < 1 || maxHopsInt > 10 {
-		maxHopsInt = 6
+	// Simple direct path check - look for direct transactions between addresses
+	query := `
+		SELECT hash, value, created_at
+		FROM transactions 
+		WHERE from_address = $1 AND to_address = $2
+		ORDER BY created_at DESC
+		LIMIT 1
+	`
+
+	var hash, value, timestamp string
+	err := s.db.QueryRow(query, fromAddress, toAddress).Scan(&hash, &value, &timestamp)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusNotFound, gin.H{
+				"error": "No direct transaction path found between these addresses",
+			})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to search for transaction path",
+		})
+		return
 	}
 
-	// Generate a demo path
-	path := generateTransactionPath(fromAddress, toAddress, maxHopsInt)
+	// Convert value from wei to ETH
+	valueFloat, _ := strconv.ParseFloat(value, 64)
+	ethValue := valueFloat / 1e18
+
+	path := []map[string]interface{}{
+		{
+			"address": fromAddress,
+			"label":   getAddressLabel(fromAddress),
+			"type":    getAddressType(fromAddress),
+		},
+		{
+			"address": toAddress,
+			"label":   getAddressLabel(toAddress),
+			"type":    getAddressType(toAddress),
+			"transaction": map[string]interface{}{
+				"hash":      hash,
+				"value":     ethValue,
+				"timestamp": timestamp,
+			},
+		},
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"from":        fromAddress,
 		"to":          toAddress,
 		"path":        path,
-		"hops":        len(path) - 1,
-		"total_value": calculatePathValue(path),
+		"hops":        1,
+		"total_value": ethValue,
 	})
-}
-
-func generateTransactionPath(from, to string, maxHops int) []map[string]interface{} {
-	path := []map[string]interface{}{
-		{
-			"address": from,
-			"label":   "Source Address",
-			"type":    "address",
-		},
-	}
-
-	// Generate intermediate addresses
-	hops := randomInt(1, maxHops)
-	for i := 0; i < hops-1; i++ {
-		path = append(path, map[string]interface{}{
-			"address": generateRandomAddress(),
-			"label":   fmt.Sprintf("Intermediate %d", i+1),
-			"type":    "address",
-			"transaction": map[string]interface{}{
-				"hash":      generateRandomTxHash(),
-				"value":     randomFloat(0.1, 10.0),
-				"timestamp": randomTimestamp(),
-			},
-		})
-	}
-
-	path = append(path, map[string]interface{}{
-		"address": to,
-		"label":   "Target Address",
-		"type":    "address",
-		"transaction": map[string]interface{}{
-			"hash":      generateRandomTxHash(),
-			"value":     randomFloat(0.1, 10.0),
-			"timestamp": randomTimestamp(),
-		},
-	})
-
-	return path
-}
-
-func calculatePathValue(path []map[string]interface{}) float64 {
-	total := 0.0
-	for _, node := range path {
-		if tx, ok := node["transaction"].(map[string]interface{}); ok {
-			if value, ok := tx["value"].(float64); ok {
-				total += value
-			}
-		}
-	}
-	return total
 }

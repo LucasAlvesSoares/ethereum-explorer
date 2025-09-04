@@ -30,13 +30,34 @@ interface TransactionFlowData {
 
 export default function TransactionFlowPage() {
   const [flowData, setFlowData] = useState<TransactionFlowData>({ nodes: [], links: [] });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+
+  // Client-side Ethereum address validation
+  const isValidEthereumAddress = (address: string): boolean => {
+    if (address.length !== 42) return false;
+    if (!address.startsWith('0x')) return false;
+    // Check if the rest are valid hex characters
+    const hexPart = address.slice(2);
+    return /^[0-9a-fA-F]+$/.test(hexPart);
+  };
 
   const fetchTransactionFlow = async (address: string) => {
     if (!address) return;
+    
+    // Clear previous error
+    setError(null);
+    
+    // Validate address format on client side first
+    if (!isValidEthereumAddress(address)) {
+      setError('Invalid Ethereum address format. Address must be 42 characters long and start with 0x followed by hexadecimal characters.');
+      setFlowData({ nodes: [], links: [] });
+      setSelectedAddress('');
+      return;
+    }
     
     setLoading(true);
     try {
@@ -45,77 +66,30 @@ export default function TransactionFlowPage() {
         const data: TransactionFlowData = await response.json();
         setFlowData(data);
         setSelectedAddress(address);
+        setError(null);
+      } else if (response.status === 404) {
+        // Handle addresses with no transaction data
+        const errorData = await response.json().catch(() => ({ error: 'No transaction data found' }));
+        setError(`No transaction data found for this address. This address may be new or have no transaction history.`);
+        setFlowData({ nodes: [], links: [] });
+        setSelectedAddress('');
       } else {
-        console.error('Failed to fetch transaction flow');
-        // Use demo data for now
-        setFlowData(generateDemoData(address));
-        setSelectedAddress(address);
+        // Handle other API errors
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        setError(errorData.error || `Server error: ${response.status}`);
+        setFlowData({ nodes: [], links: [] });
+        setSelectedAddress('');
       }
     } catch (error) {
       console.error('Error fetching transaction flow:', error);
-      // Use demo data for now
-      setFlowData(generateDemoData(address));
-      setSelectedAddress(address);
+      setError('Network error: Unable to connect to the server. Please try again.');
+      setFlowData({ nodes: [], links: [] });
+      setSelectedAddress('');
     } finally {
       setLoading(false);
     }
   };
 
-  const generateDemoData = (centerAddress: string): TransactionFlowData => {
-    const nodes: TransactionNode[] = [
-      {
-        id: centerAddress,
-        address: centerAddress,
-        label: 'Target Address',
-        value: 100,
-        type: 'address'
-      }
-    ];
-
-    const links: TransactionLink[] = [];
-
-    // Generate some connected addresses
-    const connectedAddresses = [
-      '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8e1',
-      '0x8ba1f109551bD432803012645Hac136c22C501e',
-      '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-      '0xA0b86a33E6441b8dB2B2B0B8B8B8B8B8B8B8B8B8',
-      '0xdAC17F958D2ee523a2206206994597C13D831ec7'
-    ];
-
-    connectedAddresses.forEach((addr, index) => {
-      nodes.push({
-        id: addr,
-        address: addr,
-        label: `Address ${index + 1}`,
-        value: Math.random() * 50 + 10,
-        type: Math.random() > 0.7 ? 'contract' : 'address'
-      });
-
-      // Create bidirectional links
-      if (Math.random() > 0.3) {
-        links.push({
-          source: centerAddress,
-          target: addr,
-          value: Math.random() * 10 + 1,
-          hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-          timestamp: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString()
-        });
-      }
-
-      if (Math.random() > 0.5) {
-        links.push({
-          source: addr,
-          target: centerAddress,
-          value: Math.random() * 5 + 0.5,
-          hash: `0x${Math.random().toString(16).substr(2, 64)}`,
-          timestamp: new Date(Date.now() - Math.random() * 86400000 * 30).toISOString()
-        });
-      }
-    });
-
-    return { nodes, links };
-  };
 
   useEffect(() => {
     if (!flowData.nodes.length || !svgRef.current) return;
@@ -300,9 +274,9 @@ export default function TransactionFlowPage() {
           <p className="text-sm text-gray-600 mb-2">Try these example addresses:</p>
           <div className="flex flex-wrap gap-2">
             {[
-              '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8e1',
-              '0x8ba1f109551bD432803012645Hac136c22C501e',
-              '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984'
+              '0xdAC17F958D2ee523a2206206994597C13D831ec7', // USDT Contract
+              '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984', // Uniswap Token
+              '0x28C6c06298d514Db089934071355E5743bf21d60'  // Binance Hot Wallet
             ].map((addr) => (
               <button
                 key={addr}
@@ -318,6 +292,25 @@ export default function TransactionFlowPage() {
           </div>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Validation Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                {error}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Visualization */}
       {loading ? (
