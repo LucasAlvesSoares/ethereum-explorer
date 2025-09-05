@@ -3,34 +3,8 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Clock, Hash, User, Zap } from 'lucide-react'
-
-interface Block {
-  number: number
-  hash: string
-  parent_hash: string
-  timestamp: string
-  gas_limit: number
-  gas_used: number
-  difficulty: string
-  total_difficulty: string
-  size: number
-  transaction_count: number
-  miner: string
-  extra_data: string
-  base_fee_per_gas?: string
-  created_at: string
-  updated_at: string
-}
-
-interface BlocksResponse {
-  blocks: Block[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    total_pages: number
-  }
-}
+import { Block, BlocksResponse } from '@/types'
+import { formatHash, formatNumber, formatTimestamp, formatBytes, formatPercentage } from '@/utils/formatting'
 
 export default function BlocksPage() {
   const [blocks, setBlocks] = useState<Block[]>([])
@@ -67,21 +41,6 @@ export default function BlocksPage() {
     fetchBlocks()
   }, [])
 
-  const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString()
-  }
-
-  const formatHash = (hash: string) => {
-    return `${hash.slice(0, 10)}...${hash.slice(-8)}`
-  }
-
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
-
-  const calculateGasUsedPercentage = (gasUsed: number, gasLimit: number) => {
-    return ((gasUsed / gasLimit) * 100).toFixed(1)
-  }
 
   if (loading && blocks.length === 0) {
     return (
@@ -200,20 +159,20 @@ export default function BlocksPage() {
                         </span>
                       </div>
                       <div className="text-xs text-gray-500">
-                        {calculateGasUsedPercentage(block.gas_used, block.gas_limit)}% of {formatNumber(block.gas_limit)}
+                        {formatPercentage(block.gas_used, block.gas_limit)} of {formatNumber(block.gas_limit)}
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
                         <div
                           className="bg-primary-600 h-1 rounded-full"
                           style={{
-                            width: `${calculateGasUsedPercentage(block.gas_used, block.gas_limit)}%`
+                            width: formatPercentage(block.gas_used, block.gas_limit)
                           }}
                         ></div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {(block.size / 1024).toFixed(1)} KB
+                    {formatBytes(block.size)}
                   </td>
                 </tr>
               ))}

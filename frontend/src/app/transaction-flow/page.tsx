@@ -2,31 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-
-interface TransactionNode {
-  id: string;
-  address: string;
-  label?: string;
-  value: number;
-  type: 'address' | 'contract';
-  x?: number;
-  y?: number;
-  fx?: number | null;
-  fy?: number | null;
-}
-
-interface TransactionLink {
-  source: string;
-  target: string;
-  value: number;
-  hash: string;
-  timestamp: string;
-}
-
-interface TransactionFlowData {
-  nodes: TransactionNode[];
-  links: TransactionLink[];
-}
+import { TransactionNode, TransactionLink, TransactionFlowData } from '@/types';
+import { isValidEthereumAddress } from '@/utils/validation';
 
 export default function TransactionFlowPage() {
   const [flowData, setFlowData] = useState<TransactionFlowData>({ nodes: [], links: [] });
@@ -36,14 +13,6 @@ export default function TransactionFlowPage() {
   const [error, setError] = useState<string | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
 
-  // Client-side Ethereum address validation
-  const isValidEthereumAddress = (address: string): boolean => {
-    if (address.length !== 42) return false;
-    if (!address.startsWith('0x')) return false;
-    // Check if the rest are valid hex characters
-    const hexPart = address.slice(2);
-    return /^[0-9a-fA-F]+$/.test(hexPart);
-  };
 
   const fetchTransactionFlow = async (address: string) => {
     if (!address) return;

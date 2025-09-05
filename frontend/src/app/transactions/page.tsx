@@ -4,37 +4,8 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowRight, Hash, User, Zap, CheckCircle, XCircle } from 'lucide-react'
-
-interface Transaction {
-  hash: string
-  block_number: number
-  transaction_index: number
-  from_address: string
-  to_address: string | null
-  value: string
-  gas_limit: number
-  gas_used: number | null
-  gas_price: string
-  max_fee_per_gas?: string
-  max_priority_fee_per_gas?: string
-  nonce: number
-  input_data: string
-  status: number | null
-  contract_address: string | null
-  logs_bloom: string | null
-  created_at: string
-  updated_at: string
-}
-
-interface TransactionsResponse {
-  transactions: Transaction[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    total_pages: number
-  }
-}
+import { Transaction, TransactionsResponse } from '@/types'
+import { formatHash, formatNumber, formatValue, formatGasPrice } from '@/utils/formatting'
 
 export default function TransactionsPage() {
   const searchParams = useSearchParams()
@@ -79,27 +50,6 @@ export default function TransactionsPage() {
     fetchTransactions()
   }, [blockNumber])
 
-  const formatHash = (hash: string) => {
-    return `${hash.slice(0, 10)}...${hash.slice(-8)}`
-  }
-
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
-  }
-
-  const formatValue = (value: string) => {
-    // Convert wei to ETH (1 ETH = 10^18 wei)
-    const eth = parseFloat(value) / Math.pow(10, 18)
-    if (eth === 0) return '0 ETH'
-    if (eth < 0.001) return '<0.001 ETH'
-    return `${eth.toFixed(6)} ETH`
-  }
-
-  const formatGasPrice = (gasPrice: string) => {
-    // Convert wei to gwei (1 gwei = 10^9 wei)
-    const gwei = parseFloat(gasPrice) / Math.pow(10, 9)
-    return `${gwei.toFixed(2)} gwei`
-  }
 
   const getStatusIcon = (status: number | null) => {
     if (status === null) return null

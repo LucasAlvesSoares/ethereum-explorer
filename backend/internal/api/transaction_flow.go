@@ -1,6 +1,7 @@
 package api
 
 import (
+	"crypto-analytics/backend/internal/utils"
 	"database/sql"
 	"net/http"
 	"strconv"
@@ -35,7 +36,7 @@ func (s *Server) GetTransactionFlow(c *gin.Context) {
 	address := c.Param("address")
 
 	// Validate Ethereum address format
-	if !isValidEthereumAddress(address) {
+	if !utils.IsValidEthereumAddress(address) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid Ethereum address format",
 		})
@@ -58,23 +59,6 @@ func (s *Server) GetTransactionFlow(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, flowData)
-}
-
-// isValidEthereumAddress checks if the address is a valid Ethereum address format
-func isValidEthereumAddress(address string) bool {
-	if len(address) != 42 {
-		return false
-	}
-	if !strings.HasPrefix(address, "0x") {
-		return false
-	}
-	// Check if the rest are valid hex characters
-	for _, char := range address[2:] {
-		if !((char >= '0' && char <= '9') || (char >= 'a' && char <= 'f') || (char >= 'A' && char <= 'F')) {
-			return false
-		}
-	}
-	return true
 }
 
 // getTransactionFlowFromDB queries the database for real transaction flow data
@@ -224,7 +208,7 @@ func getAddressType(address string) string {
 func (s *Server) GetAddressAnalytics(c *gin.Context) {
 	address := c.Param("address")
 
-	if !isValidEthereumAddress(address) {
+	if !utils.IsValidEthereumAddress(address) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid Ethereum address format",
 		})
@@ -307,7 +291,7 @@ func (s *Server) GetTransactionPath(c *gin.Context) {
 	fromAddress := c.Query("from")
 	toAddress := c.Query("to")
 
-	if !isValidEthereumAddress(fromAddress) || !isValidEthereumAddress(toAddress) {
+	if !utils.IsValidEthereumAddress(fromAddress) || !utils.IsValidEthereumAddress(toAddress) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid Ethereum address format",
 		})

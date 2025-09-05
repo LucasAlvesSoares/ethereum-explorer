@@ -3,26 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Search, Activity, Blocks, Zap, Clock, Hash, User } from 'lucide-react'
 import Link from 'next/link'
-
-interface Block {
-  number: number
-  hash: string
-  timestamp: string
-  gas_used: number
-  gas_limit: number
-  transaction_count: number
-  miner: string
-}
-
-interface BlocksResponse {
-  blocks: Block[]
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    total_pages: number
-  }
-}
+import { Block, BlocksResponse } from '@/types'
+import { formatHash, formatNumber, formatTimestamp, formatAddress } from '@/utils/formatting'
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -158,7 +140,7 @@ export default function Home() {
                           <div className="flex items-center">
                             <Hash className="w-3 h-3 mr-1" />
                             <span className="font-mono">
-                              {block.hash.slice(0, 10)}...{block.hash.slice(-8)}
+                              {formatHash(block.hash)}
                             </span>
                           </div>
                           <div className="flex items-center">
@@ -168,7 +150,7 @@ export default function Home() {
                           <div className="flex items-center">
                             <User className="w-3 h-3 mr-1" />
                             <span className="font-mono">
-                              {block.miner.slice(0, 6)}...{block.miner.slice(-4)}
+                              {formatAddress(block.miner)}
                             </span>
                           </div>
                         </div>
