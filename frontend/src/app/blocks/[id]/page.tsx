@@ -303,13 +303,6 @@ export default function BlockDetailPage() {
               <span className="text-sm text-gray-900">{formatNumber(block.gas_limit)}</span>
             </div>
 
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Gas Utilization:</span>
-              <span className="text-sm text-gray-900">
-                {formatPercentage(block.gas_used, block.gas_limit)}
-              </span>
-            </div>
-
             {/* Gas Usage Bar */}
             <div className="mt-4">
               <div className="flex justify-between text-sm text-gray-600 mb-2">
@@ -332,11 +325,6 @@ export default function BlockDetailPage() {
                 <span className="text-sm text-gray-900">{formatGasPrice(block.base_fee_per_gas)}</span>
               </div>
             )}
-
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Block Size:</span>
-              <span className="text-sm text-gray-900">{formatBytes(block.size)}</span>
-            </div>
 
             {block.extra_data && block.extra_data !== '0x' && (
               <div className="flex justify-between items-start">

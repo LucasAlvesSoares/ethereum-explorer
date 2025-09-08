@@ -434,38 +434,13 @@ export default function TransactionDetailPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Block Number:</span>
-              <Link
-                href={`/blocks/${transaction.block_number}`}
-                className="text-sm text-primary-600 hover:text-primary-800"
-              >
-                {formatNumber(transaction.block_number)}
-              </Link>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Transaction Index:</span>
-              <span className="text-sm text-gray-900">{transaction.transaction_index}</span>
-            </div>
-
-            <div className="flex justify-between">
               <span className="text-sm text-gray-600 font-medium">Created At:</span>
               <span className="text-sm text-gray-900">{formatTimestamp(transaction.created_at)}</span>
             </div>
-          </div>
 
-          <div className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Status:</span>
-              <div className="flex items-center">
-                {getStatusIcon(transaction.status)}
-                <span className={`ml-2 text-sm ${
-                  transaction.status === 1 ? 'text-green-700' : 
-                  transaction.status === 0 ? 'text-red-700' : 'text-yellow-700'
-                }`}>
-                  {getStatusText(transaction.status)}
-                </span>
-              </div>
+              <span className="text-sm text-gray-600 font-medium">Updated At:</span>
+              <span className="text-sm text-gray-900">{formatTimestamp(transaction.updated_at)}</span>
             </div>
 
             {transaction.logs_bloom && (
@@ -474,11 +449,22 @@ export default function TransactionDetailPage() {
                 <span className="text-sm text-gray-500">Present</span>
               </div>
             )}
+          </div>
 
+          <div className="space-y-4">
             <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Updated At:</span>
-              <span className="text-sm text-gray-900">{formatTimestamp(transaction.updated_at)}</span>
+              <span className="text-sm text-gray-600 font-medium">Transaction Type:</span>
+              <span className="text-sm text-gray-900">
+                {transaction.to_address ? 'Transfer' : 'Contract Creation'}
+              </span>
             </div>
+
+            {transaction.input_data && transaction.input_data !== '0x' && (
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600 font-medium">Has Input Data:</span>
+                <span className="text-sm text-gray-900">Yes ({Math.floor(transaction.input_data.length / 2)} bytes)</span>
+              </div>
+            )}
           </div>
         </div>
       </div>
