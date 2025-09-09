@@ -11,12 +11,6 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - **Search Functionality**: Global search across blocks, transactions, and addresses
 - **Real-time Updates**: Live data streaming via WebSocket connections
 
-### ⛽ Gas Analytics Dashboard
-- **Real-time Gas Tracking**: Live gas price monitoring with slow/standard/fast categories
-- **Historical Analysis**: 24-hour gas price trends, averages, and statistics
-- **Network Utilization**: Real-time network congestion metrics
-- **Fee Optimization**: Smart recommendations for optimal transaction timing
-- **Gas Price Charts**: Visual representations of fee history and trends
 
 ### 🔄 Transaction Flow Analysis
 - **Flow Visualization**: Interactive transaction flow diagrams
@@ -129,7 +123,6 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - **Address Profile** (`/addresses/[address]`) - Address activity and history
 
 ### Analytics Pages
-- **Gas Analytics** (`/gas-analytics`) - Real-time gas price dashboard
 - **Transaction Flow** (`/transaction-flow`) - Flow analysis and visualization
 
 ## 🔌 API Endpoints

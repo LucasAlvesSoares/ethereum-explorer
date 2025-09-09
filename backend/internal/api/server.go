@@ -85,13 +85,6 @@ func (s *Server) setupRoutes() {
 	// Network stats
 	api.GET("/stats", s.getNetworkStats)
 
-	// Gas Analytics
-	api.GET("/gas/prices", s.getGasPrices)
-	api.GET("/gas/stats", s.getGasPriceStats)
-	api.GET("/gas/history", s.getGasPriceHistory)
-	api.GET("/gas/calculate", s.calculateGasFee)
-	api.GET("/gas/recommendations", s.getGasPriceRecommendations)
-
 	// Transaction Flow Visualization
 	api.GET("/transaction-flow/:address", s.GetTransactionFlow)
 	api.GET("/address-analytics/:address", s.GetAddressAnalytics)

@@ -59,10 +59,6 @@ func main() {
 		go ingestionService.Start()
 		logrus.Info("Started blockchain ingestion service")
 
-		// Start gas price service (only if Ethereum client is available)
-		gasPriceService := services.NewGasPriceService(db, ethClient)
-		go gasPriceService.Start()
-		logrus.Info("Started gas price tracking service")
 	} else {
 		logrus.Info("Skipping blockchain ingestion service (no Ethereum connection)")
 	}
