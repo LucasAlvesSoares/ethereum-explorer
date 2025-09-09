@@ -339,15 +339,6 @@ export default function TransactionDetailPage() {
             </div>
 
             {transaction.gas_used && (
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600 font-medium">Gas Utilization:</span>
-                <span className="text-sm text-gray-900">
-                  {((transaction.gas_used / transaction.gas_limit) * 100).toFixed(2)}%
-                </span>
-              </div>
-            )}
-
-            {transaction.gas_used && (
               <div className="mt-4">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
                   <span>Gas Usage</span>
