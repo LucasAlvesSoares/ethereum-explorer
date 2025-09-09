@@ -1,72 +1,233 @@
-# Ethereum Blockchain Explorer
+# Crypto Analytics Platform
 
-A production-ready Ethereum blockchain explorer with advanced analytics capabilities.
+A comprehensive blockchain analytics platform with real-time data processing, advanced visualization, and deep insights into Ethereum network activity.
 
-## Architecture
+## 🚀 Features
 
-- **Backend**: Go with Gin framework
-- **Frontend**: Next.js with TypeScript
-- **Database**: PostgreSQL
-- **Blockchain**: Ethereum via go-ethereum client
+### 📊 Core Blockchain Explorer
+- **Block Explorer**: Navigate through blocks with detailed information including transactions, gas usage, and timestamps
+- **Transaction Details**: View comprehensive transaction data with status, gas fees, and execution traces
+- **Address Profiles**: Analyze address activity, balance history, and transaction patterns
+- **Search Functionality**: Global search across blocks, transactions, and addresses
+- **Real-time Updates**: Live data streaming via WebSocket connections
 
-## Quick Start
+### ⛽ Gas Analytics Dashboard
+- **Real-time Gas Tracking**: Live gas price monitoring with slow/standard/fast categories
+- **Historical Analysis**: 24-hour gas price trends, averages, and statistics
+- **Network Utilization**: Real-time network congestion metrics
+- **Fee Optimization**: Smart recommendations for optimal transaction timing
+- **Gas Price Charts**: Visual representations of fee history and trends
 
+### 🔄 Transaction Flow Analysis
+- **Flow Visualization**: Interactive transaction flow diagrams
+- **Address Clustering**: Group related addresses and identify patterns
+- **Fund Tracking**: Follow transaction paths and money flows
+- **Risk Assessment**: Identify suspicious transaction patterns
+- **Network Analysis**: Understand transaction relationships
+
+### 📈 Advanced Analytics
+- **Network Statistics**: Real-time blockchain metrics and health indicators
+- **Performance Monitoring**: Track network throughput and efficiency
+- **Data Aggregation**: Historical data analysis and trend identification
+- **Custom Dashboards**: Configurable analytics views
+- **Export Capabilities**: Data export for further analysis
+
+### 🔧 Technical Features
+- **High Performance**: Optimized data ingestion and processing
+- **Scalable Architecture**: Microservices-based design
+- **Real-time Processing**: Live data streaming and updates
+- **API Integration**: RESTful APIs for external integrations
+- **Docker Support**: Containerized deployment
+- **Database Optimization**: Efficient data storage and retrieval
+
+## 🛠 Tech Stack
+
+### Backend
+- **Go** - High-performance backend services
+- **Gin Framework** - Fast HTTP web framework
+- **go-ethereum** - Ethereum client library
+- **PostgreSQL** - Primary database
+- **Redis** - Caching and session storage
+- **WebSocket** - Real-time communication
+- **Docker** - Containerization
+
+### Frontend
+- **Next.js 14** - React-based frontend framework
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first styling
+- **React Query** - Data fetching and caching
+- **Recharts** - Data visualization
+- **ethers.js** - Ethereum JavaScript library
+
+### Infrastructure
+- **Docker Compose** - Local development environment
+- **PostgreSQL** - Relational database
+- **Redis** - In-memory data store
+- **Nginx** - Reverse proxy (production)
+
+## 🏗 Architecture
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Blockchain    │
+│   (Next.js)     │◄──►│     (Go)        │◄──►│   (Ethereum)    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │              ┌─────────────────┐              │
+         │              │   PostgreSQL    │              │
+         └──────────────►│   Database      │◄─────────────┘
+                        └─────────────────┘
+                                 │
+                        ┌─────────────────┐
+                        │     Redis       │
+                        │    Cache        │
+                        └─────────────────┘
+```
+
+## 🚦 Quick Start
+
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Go 1.21+ (for local development)
+
+### Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd crypto-analytics
+   ```
+
+2. **Environment Configuration**
+   ```bash
+   # Copy environment files
+   cp backend/.env.example backend/.env
+   
+   # Configure your Ethereum RPC URL in backend/.env
+   ETHEREUM_RPC_URL=https://your-ethereum-node-url
+   ```
+
+3. **Start the development environment**
+   ```bash
+   docker-compose up -d
+   ```
+
+4. **Access the applications**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8080
+   - Database: localhost:5432
+
+## 📱 Application Pages
+
+### Core Pages
+- **Home** (`/`) - Platform overview and quick stats
+- **Blocks** (`/blocks`) - Block explorer with pagination
+- **Block Details** (`/blocks/[id]`) - Individual block information
+- **Transactions** (`/transactions`) - Transaction list and search
+- **Transaction Details** (`/transactions/[hash]`) - Detailed transaction view
+- **Address Profile** (`/addresses/[address]`) - Address activity and history
+
+### Analytics Pages
+- **Gas Analytics** (`/gas-analytics`) - Real-time gas price dashboard
+- **Transaction Flow** (`/transaction-flow`) - Flow analysis and visualization
+
+## 🔌 API Endpoints
+
+### Core API
+- `GET /api/v1/blocks` - List blocks
+- `GET /api/v1/blocks/:id` - Get block details
+- `GET /api/v1/transactions` - List transactions
+- `GET /api/v1/transactions/:hash` - Get transaction details
+- `GET /api/v1/addresses/:address` - Get address information
+
+### Analytics API
+- `GET /api/v1/gas/stats` - Gas price statistics
+- `GET /api/v1/flow/analyze` - Transaction flow analysis
+- `GET /api/v1/network/stats` - Network statistics
+
+### WebSocket
+- `ws://localhost:8080/ws` - Real-time updates
+
+## 🗄 Database Schema
+
+### Core Tables
+- `blocks` - Blockchain blocks
+- `transactions` - Transaction records
+- `addresses` - Address information
+- `gas_prices` - Historical gas price data
+
+## 🔧 Configuration
+
+### Environment Variables
+
+#### Backend (.env)
 ```bash
-# Start local development environment
-docker-compose up -d
+# Database
+DATABASE_URL=postgres://user:password@localhost:5432/crypto_analytics
 
-# Backend will be available at http://localhost:8080
-# Frontend will be available at http://localhost:3000
+# Ethereum
+ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/your-key
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Server
+PORT=8080
 ```
 
-## Project Structure
+## 🚀 Deployment
 
+### Production Deployment
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml build
+
+# Deploy with production configuration
+docker-compose -f docker-compose.prod.yml up -d
 ```
-crypto-analytics/
-├── backend/           # Go API server
-├── frontend/          # Next.js application
-├── database/          # PostgreSQL schemas and migrations
-├── docker/           # Docker configurations
-├── docs/             # Documentation
-└── scripts/          # Utility scripts
+
+## 🧪 Development
+
+### Running Tests
+```bash
+# Backend tests
+cd backend && go test ./...
+
+# Frontend tests
+cd frontend && npm test
 ```
 
-## Environment Configuration
+### Code Quality
+```bash
+# Go formatting and linting
+cd backend && go fmt ./... && golangci-lint run
 
-- **Local**: Full Docker Compose stack
-- **Staging**: AWS deployment (EC2 + RDS)
+# Frontend linting
+cd frontend && npm run lint
+```
 
-## Features
+## 📊 Monitoring
 
-### Core Explorer
-- [x] Block details and navigation
-- [x] Transaction details and search
-- [x] Address profiles and history
-- [x] Real-time updates via WebSocket
-- [x] Network statistics
+- **Logs**: Structured JSON logging
+- **Metrics**: Application performance metrics
+- **Health Checks**: Service health endpoints
+- **Database Monitoring**: Query performance tracking
 
-### Advanced Analytics
-- [x] Gas price analytics
-- [x] Transaction flow visualization
-- [x] Address clustering and labeling
-- [x] Token analytics
-- [x] Smart contract analysis
+## 🤝 Contributing
 
-## Tech Stack
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
 
-### Backend Dependencies
-- `gin-gonic/gin` - Web framework
-- `ethereum/go-ethereum` - Ethereum client
-- `lib/pq` - PostgreSQL driver
-- `gorilla/websocket` - WebSocket support
+## 📄 License
 
-### Frontend Dependencies
-- `next` - React framework
-- `ethers` - Ethereum JavaScript library
-- `@tanstack/react-query` - Data fetching
-- `recharts` - Charts and visualization
-- `tailwindcss` - Styling
+This project is licensed under the MIT License.
 
-## Development
+## 🔗 Links
 
-See individual README files in `backend/` and `frontend/` directories for detailed setup instructions.
+- **Documentation**: [Coming Soon]
+- **API Reference**: [Coming Soon]
+- **Support**: [Issues](https://github.com/your-repo/issues)

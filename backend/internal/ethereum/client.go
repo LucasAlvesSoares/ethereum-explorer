@@ -123,3 +123,62 @@ func (c *Client) IsContract(address common.Address) (bool, error) {
 func (c *Client) IsConnected() bool {
 	return c != nil && c.client != nil
 }
+
+// FeeHistory represents the fee history data with raw JSON handling
+type FeeHistory struct {
+	OldestBlock   *big.Int     `json:"oldestBlock"`
+	BaseFeePerGas []*big.Int   `json:"baseFeePerGas"`
+	Reward        [][]*big.Int `json:"reward,omitempty"`
+}
+
+// rawFeeHistory represents the raw JSON response from eth_feeHistory
+type rawFeeHistory struct {
+	OldestBlock   string     `json:"oldestBlock"`
+	BaseFeePerGas []string   `json:"baseFeePerGas"`
+	Reward        [][]string `json:"reward,omitempty"`
+}
+
+// FeeHistory returns fee history for gas price analysis using raw RPC
+func (c *Client) FeeHistory(blockCount uint64, lastBlock *big.Int, rewardPercentiles []float64) (*FeeHistory, error) {
+	var rawResult rawFeeHistory
+	err := c.client.Client().CallContext(c.ctx, &rawResult, "eth_feeHistory",
+		fmt.Sprintf("0x%x", blockCount),
+		"latest",
+		rewardPercentiles)
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert raw strings to *big.Int
+	result := &FeeHistory{}
+
+	// Parse oldest block
+	if rawResult.OldestBlock != "" {
+		result.OldestBlock = new(big.Int)
+		result.OldestBlock.SetString(rawResult.OldestBlock, 0)
+	}
+
+	// Parse base fees
+	result.BaseFeePerGas = make([]*big.Int, len(rawResult.BaseFeePerGas))
+	for i, baseFeeStr := range rawResult.BaseFeePerGas {
+		result.BaseFeePerGas[i] = new(big.Int)
+		result.BaseFeePerGas[i].SetString(baseFeeStr, 0)
+	}
+
+	// Parse rewards
+	result.Reward = make([][]*big.Int, len(rawResult.Reward))
+	for i, blockRewards := range rawResult.Reward {
+		result.Reward[i] = make([]*big.Int, len(blockRewards))
+		for j, rewardStr := range blockRewards {
+			result.Reward[i][j] = new(big.Int)
+			result.Reward[i][j].SetString(rewardStr, 0)
+		}
+	}
+
+	return result, nil
+}
+
+// SuggestGasPrice returns a suggested gas price
+func (c *Client) SuggestGasPrice() (*big.Int, error) {
+	return c.client.SuggestGasPrice(c.ctx)
+}

@@ -73,6 +73,12 @@ func (s *IngestionService) IngestBlock(blockNumber *big.Int) error {
 		}
 	}
 
+	// Store gas price data
+	if err := s.storeGasPriceData(tx, block); err != nil {
+		s.logger.Warnf("Failed to store gas price data for block %s: %v", blockNumber.String(), err)
+		// Don't fail the whole ingestion if gas price storage fails
+	}
+
 	// Commit transaction
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("failed to commit transaction: %w", err)
@@ -255,6 +261,78 @@ func (s *IngestionService) storeTransaction(tx *sql.Tx, ethTx *types.Transaction
 		status,
 		contractAddress,
 		logsBloom,
+	)
+
+	return err
+}
+
+// storeGasPriceData stores gas price analytics data for a block
+func (s *IngestionService) storeGasPriceData(tx *sql.Tx, block *types.Block) error {
+	// Calculate gas prices from transactions in this block
+	if len(block.Transactions()) == 0 {
+		return nil // Skip blocks with no transactions
+	}
+
+	var gasPrices []int64
+	for _, ethTx := range block.Transactions() {
+		if ethTx.GasPrice().IsInt64() {
+			gasPrices = append(gasPrices, ethTx.GasPrice().Int64())
+		}
+	}
+
+	if len(gasPrices) == 0 {
+		return nil // Skip if no valid gas prices
+	}
+
+	// Sort gas prices to calculate percentiles
+	for i := 0; i < len(gasPrices); i++ {
+		for j := i + 1; j < len(gasPrices); j++ {
+			if gasPrices[i] > gasPrices[j] {
+				gasPrices[i], gasPrices[j] = gasPrices[j], gasPrices[i]
+			}
+		}
+	}
+
+	// Calculate percentiles (convert from wei to gwei)
+	slowGasPrice := gasPrices[len(gasPrices)*25/100] / 1e9     // 25th percentile
+	standardGasPrice := gasPrices[len(gasPrices)*50/100] / 1e9 // 50th percentile (median)
+	fastGasPrice := gasPrices[len(gasPrices)*75/100] / 1e9     // 75th percentile
+
+	// Calculate network utilization
+	utilization := float64(block.GasUsed()) / float64(block.GasLimit()) * 100
+
+	// Get base fee per gas if available
+	var baseFeePerGas *int64
+	if block.BaseFee() != nil && block.BaseFee().IsInt64() {
+		val := block.BaseFee().Int64()
+		baseFeePerGas = &val
+	}
+
+	timestamp := time.Unix(int64(block.Time()), 0)
+
+	query := `
+		INSERT INTO gas_prices (
+			block_number, timestamp, base_fee_per_gas, slow_gas_price, 
+			standard_gas_price, fast_gas_price, network_utilization
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (block_number) DO UPDATE SET
+			timestamp = EXCLUDED.timestamp,
+			base_fee_per_gas = EXCLUDED.base_fee_per_gas,
+			slow_gas_price = EXCLUDED.slow_gas_price,
+			standard_gas_price = EXCLUDED.standard_gas_price,
+			fast_gas_price = EXCLUDED.fast_gas_price,
+			network_utilization = EXCLUDED.network_utilization,
+			created_at = CURRENT_TIMESTAMP
+	`
+
+	_, err := tx.Exec(query,
+		block.Number().Int64(),
+		timestamp,
+		baseFeePerGas,
+		slowGasPrice,
+		standardGasPrice,
+		fastGasPrice,
+		utilization,
 	)
 
 	return err

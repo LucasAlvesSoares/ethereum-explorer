@@ -36,8 +36,11 @@ export default function RootLayout({
                   <a href="/transactions" className="text-gray-500 hover:text-gray-900">
                     Transactions
                   </a>
-                  <a href="/analytics" className="text-gray-500 hover:text-gray-900">
-                    Analytics
+                  <a href="/gas-analytics" className="text-gray-500 hover:text-gray-900">
+                    Gas Analytics
+                  </a>
+                  <a href="/transaction-flow" className="text-gray-500 hover:text-gray-900">
+                    Flow Analysis
                   </a>
                 </nav>
               </div>

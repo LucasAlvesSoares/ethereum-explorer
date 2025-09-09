@@ -38,6 +38,7 @@ func Migrate(db *sql.DB) error {
 		createAddressesTable,
 		createTokensTable,
 		createEventsTable,
+		createGasPricesTable,
 		createIndexes,
 	}
 
@@ -142,6 +143,23 @@ CREATE TABLE IF NOT EXISTS events (
     UNIQUE(transaction_hash, log_index)
 );`
 
+const createGasPricesTable = `
+CREATE TABLE IF NOT EXISTS gas_prices (
+    id BIGSERIAL PRIMARY KEY,
+    block_number BIGINT NOT NULL,
+    timestamp TIMESTAMP NOT NULL,
+    base_fee_per_gas BIGINT,
+    slow_gas_price BIGINT NOT NULL,
+    standard_gas_price BIGINT NOT NULL,
+    fast_gas_price BIGINT NOT NULL,
+    slow_wait_time INTEGER DEFAULT 300,
+    standard_wait_time INTEGER DEFAULT 180,
+    fast_wait_time INTEGER DEFAULT 60,
+    network_utilization DECIMAL(5,2),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(block_number)
+);`
+
 const createIndexes = `
 -- Performance indexes
 CREATE INDEX IF NOT EXISTS idx_blocks_timestamp ON blocks(timestamp);
@@ -154,6 +172,8 @@ CREATE INDEX IF NOT EXISTS idx_addresses_is_contract ON addresses(is_contract);
 CREATE INDEX IF NOT EXISTS idx_events_address ON events(address);
 CREATE INDEX IF NOT EXISTS idx_events_topic0 ON events(topic0);
 CREATE INDEX IF NOT EXISTS idx_events_block_number ON events(block_number);
+CREATE INDEX IF NOT EXISTS idx_gas_prices_timestamp ON gas_prices(timestamp);
+CREATE INDEX IF NOT EXISTS idx_gas_prices_block_number ON gas_prices(block_number);
 
 -- Full text search indexes
 CREATE INDEX IF NOT EXISTS idx_addresses_label_fts ON addresses USING gin(to_tsvector('english', COALESCE(label, '')));
