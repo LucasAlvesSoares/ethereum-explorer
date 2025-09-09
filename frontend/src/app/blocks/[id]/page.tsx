@@ -263,7 +263,12 @@ export default function BlockDetailPage() {
             <div className="flex justify-between items-start">
               <span className="text-sm text-gray-600 font-medium">Miner:</span>
               <div className="flex items-center">
-                <span className="text-sm font-mono text-gray-900 mr-2">{formatHash(block.miner)}</span>
+                <Link
+                  href={`/addresses/${block.miner}`}
+                  className="text-sm font-mono text-primary-600 hover:text-primary-800 mr-2"
+                >
+                  {formatHash(block.miner)}
+                </Link>
                 <button
                   onClick={() => copyToClipboard(block.miner, 'miner')}
                   className="text-gray-400 hover:text-gray-600"
@@ -402,14 +407,24 @@ export default function BlockDetailPage() {
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-gray-900 font-mono text-sm">
+                      <Link
+                        href={`/addresses/${tx.from_address}`}
+                        className="text-primary-600 hover:text-primary-800 font-mono text-sm"
+                      >
                         {formatHash(tx.from_address)}
-                      </span>
+                      </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-gray-900 font-mono text-sm">
-                        {tx.to_address ? formatHash(tx.to_address) : 'Contract Creation'}
-                      </span>
+                      {tx.to_address ? (
+                        <Link
+                          href={`/addresses/${tx.to_address}`}
+                          className="text-primary-600 hover:text-primary-800 font-mono text-sm"
+                        >
+                          {formatHash(tx.to_address)}
+                        </Link>
+                      ) : (
+                        <span className="text-gray-900 font-mono text-sm">Contract Creation</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {formatValue(tx.value)} ETH

@@ -254,7 +254,12 @@ export default function TransactionDetailPage() {
             <div className="flex justify-between items-start">
               <span className="text-sm text-gray-600 font-medium">From:</span>
               <div className="flex items-center">
-                <span className="text-sm font-mono text-gray-900 mr-2">{formatHash(transaction.from_address)}</span>
+                <Link
+                  href={`/addresses/${transaction.from_address}`}
+                  className="text-sm font-mono text-primary-600 hover:text-primary-800 mr-2"
+                >
+                  {formatHash(transaction.from_address)}
+                </Link>
                 <button
                   onClick={() => copyToClipboard(transaction.from_address, 'from')}
                   className="text-gray-400 hover:text-gray-600"
@@ -273,7 +278,12 @@ export default function TransactionDetailPage() {
               <div className="flex items-center">
                 {transaction.to_address ? (
                   <>
-                    <span className="text-sm font-mono text-gray-900 mr-2">{formatHash(transaction.to_address)}</span>
+                    <Link
+                      href={`/addresses/${transaction.to_address}`}
+                      className="text-sm font-mono text-primary-600 hover:text-primary-800 mr-2"
+                    >
+                      {formatHash(transaction.to_address)}
+                    </Link>
                     <button
                       onClick={() => copyToClipboard(transaction.to_address!, 'to')}
                       className="text-gray-400 hover:text-gray-600"
@@ -305,7 +315,12 @@ export default function TransactionDetailPage() {
               <div className="flex justify-between items-start">
                 <span className="text-sm text-gray-600 font-medium">Contract Created:</span>
                 <div className="flex items-center">
-                  <span className="text-sm font-mono text-gray-900 mr-2">{formatHash(transaction.contract_address)}</span>
+                  <Link
+                    href={`/addresses/${transaction.contract_address}`}
+                    className="text-sm font-mono text-primary-600 hover:text-primary-800 mr-2"
+                  >
+                    {formatHash(transaction.contract_address)}
+                  </Link>
                   <button
                     onClick={() => copyToClipboard(transaction.contract_address!, 'contract')}
                     className="text-gray-400 hover:text-gray-600"

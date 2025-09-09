@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS blocks (
 const createTransactionsTable = `
 CREATE TABLE IF NOT EXISTS transactions (
     hash VARCHAR(66) PRIMARY KEY,
-    block_number BIGINT NOT NULL REFERENCES blocks(number),
+    block_number BIGINT NOT NULL,
     transaction_index INTEGER NOT NULL,
     from_address VARCHAR(42) NOT NULL,
     to_address VARCHAR(42),
@@ -129,7 +129,7 @@ CREATE TABLE IF NOT EXISTS tokens (
 const createEventsTable = `
 CREATE TABLE IF NOT EXISTS events (
     id BIGSERIAL PRIMARY KEY,
-    transaction_hash VARCHAR(66) NOT NULL REFERENCES transactions(hash),
+    transaction_hash VARCHAR(66) NOT NULL,
     block_number BIGINT NOT NULL,
     log_index INTEGER NOT NULL,
     address VARCHAR(42) NOT NULL,

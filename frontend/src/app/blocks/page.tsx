@@ -145,9 +145,12 @@ export default function BlocksPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <User className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-gray-900 text-sm font-mono">
+                      <Link
+                        href={`/addresses/${block.miner}`}
+                        className="text-primary-600 hover:text-primary-800 text-sm font-mono"
+                      >
                         {formatHash(block.miner)}
-                      </span>
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

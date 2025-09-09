@@ -393,10 +393,28 @@ func (s *Server) getAddress(c *gin.Context) {
 		return
 	}
 
+	// Calculate actual balance from transactions
+	balance, err := s.calculateAddressBalance(address)
+	if err != nil {
+		logrus.Errorf("Failed to calculate address balance: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to calculate balance"})
+		return
+	}
+
+	// Get transaction count for this address
+	var transactionCount int64
+	countQuery := "SELECT COUNT(*) FROM transactions WHERE from_address = $1 OR to_address = $1"
+	err = s.db.QueryRow(countQuery, address).Scan(&transactionCount)
+	if err != nil {
+		logrus.Errorf("Failed to get transaction count: %v", err)
+		transactionCount = 0
+	}
+
+	// Try to get additional address info from addresses table
 	query := `
-		SELECT address, balance, nonce, is_contract, contract_creator,
+		SELECT address, nonce, is_contract, contract_creator,
 			   creation_transaction, first_seen_block, last_seen_block,
-			   transaction_count, label, tags, created_at, updated_at
+			   label, tags, created_at, updated_at
 		FROM addresses WHERE address = $1
 	`
 
@@ -406,20 +424,20 @@ func (s *Server) getAddress(c *gin.Context) {
 	var label sql.NullString
 	var tags sql.NullString
 
-	err := s.db.QueryRow(query, address).Scan(
-		&addr.Address, &addr.Balance, &addr.Nonce, &addr.IsContract,
+	err = s.db.QueryRow(query, address).Scan(
+		&addr.Address, &addr.Nonce, &addr.IsContract,
 		&contractCreator, &creationTransaction, &firstSeenBlock, &lastSeenBlock,
-		&addr.TransactionCount, &label, &tags, &addr.CreatedAt, &addr.UpdatedAt,
+		&label, &tags, &addr.CreatedAt, &addr.UpdatedAt,
 	)
 
 	if err == sql.ErrNoRows {
-		// Address not in database, return empty address info
+		// Address not in database, create basic address info
 		addr = Address{
 			Address:          address,
-			Balance:          "0",
+			Balance:          balance,
 			Nonce:            0,
 			IsContract:       false,
-			TransactionCount: 0,
+			TransactionCount: transactionCount,
 			Tags:             []string{},
 		}
 	} else if err != nil {
@@ -427,6 +445,10 @@ func (s *Server) getAddress(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch address"})
 		return
 	} else {
+		// Use calculated balance instead of stored balance
+		addr.Balance = balance
+		addr.TransactionCount = transactionCount
+
 		if contractCreator.Valid {
 			addr.ContractCreator = &contractCreator.String
 		}
@@ -453,6 +475,72 @@ func (s *Server) getAddress(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, addr)
+}
+
+// calculateAddressBalance calculates the actual balance of an address from transactions
+func (s *Server) calculateAddressBalance(address string) (string, error) {
+	// Calculate incoming value (received)
+	var incomingValue sql.NullString
+	incomingQuery := `
+		SELECT COALESCE(SUM(CAST(value AS NUMERIC)), 0)::TEXT
+		FROM transactions 
+		WHERE to_address = $1 AND status = 1
+	`
+	err := s.db.QueryRow(incomingQuery, address).Scan(&incomingValue)
+	if err != nil {
+		return "0", fmt.Errorf("failed to calculate incoming value: %w", err)
+	}
+
+	// Calculate outgoing value (sent + gas fees)
+	var outgoingValue sql.NullString
+	var gasFees sql.NullString
+
+	outgoingQuery := `
+		SELECT COALESCE(SUM(CAST(value AS NUMERIC)), 0)::TEXT
+		FROM transactions 
+		WHERE from_address = $1 AND status = 1
+	`
+	err = s.db.QueryRow(outgoingQuery, address).Scan(&outgoingValue)
+	if err != nil {
+		return "0", fmt.Errorf("failed to calculate outgoing value: %w", err)
+	}
+
+	// Calculate gas fees paid
+	gasFeesQuery := `
+		SELECT COALESCE(SUM(CAST(gas_used AS NUMERIC) * CAST(gas_price AS NUMERIC)), 0)::TEXT
+		FROM transactions 
+		WHERE from_address = $1 AND status = 1 AND gas_used IS NOT NULL
+	`
+	err = s.db.QueryRow(gasFeesQuery, address).Scan(&gasFees)
+	if err != nil {
+		return "0", fmt.Errorf("failed to calculate gas fees: %w", err)
+	}
+
+	// Calculate net balance: incoming - outgoing - gas_fees
+	balanceQuery := `
+		SELECT (CAST($1 AS NUMERIC) - CAST($2 AS NUMERIC) - CAST($3 AS NUMERIC))::TEXT
+	`
+
+	var balance string
+	incomingVal := "0"
+	if incomingValue.Valid {
+		incomingVal = incomingValue.String
+	}
+	outgoingVal := "0"
+	if outgoingValue.Valid {
+		outgoingVal = outgoingValue.String
+	}
+	gasFeesVal := "0"
+	if gasFees.Valid {
+		gasFeesVal = gasFees.String
+	}
+
+	err = s.db.QueryRow(balanceQuery, incomingVal, outgoingVal, gasFeesVal).Scan(&balance)
+	if err != nil {
+		return "0", fmt.Errorf("failed to calculate final balance: %w", err)
+	}
+
+	return balance, nil
 }
 
 // getAddressTransactions returns transactions for a specific address

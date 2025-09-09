@@ -171,9 +171,12 @@ export default function TransactionsPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <Hash className="w-4 h-4 mr-2 text-gray-400" />
-                      <span className="text-gray-900 font-mono text-sm">
+                      <Link
+                        href={`/transactions/${tx.hash}`}
+                        className="text-primary-600 hover:text-primary-800 font-mono text-sm"
+                      >
                         {formatHash(tx.hash)}
-                      </span>
+                      </Link>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -188,17 +191,23 @@ export default function TransactionsPage() {
                     <div className="flex items-center space-x-2">
                       <div className="flex items-center">
                         <User className="w-3 h-3 mr-1 text-gray-400" />
-                        <span className="text-gray-900 font-mono text-xs">
+                        <Link
+                          href={`/addresses/${tx.from_address}`}
+                          className="text-primary-600 hover:text-primary-800 font-mono text-xs"
+                        >
                           {formatHash(tx.from_address)}
-                        </span>
+                        </Link>
                       </div>
                       <ArrowRight className="w-3 h-3 text-gray-400" />
                       <div className="flex items-center">
                         <User className="w-3 h-3 mr-1 text-gray-400" />
                         {tx.to_address ? (
-                          <span className="text-gray-900 font-mono text-xs">
+                          <Link
+                            href={`/addresses/${tx.to_address}`}
+                            className="text-primary-600 hover:text-primary-800 font-mono text-xs"
+                          >
                             {formatHash(tx.to_address)}
-                          </span>
+                          </Link>
                         ) : (
                           <span className="text-gray-500 text-xs">Contract Creation</span>
                         )}
