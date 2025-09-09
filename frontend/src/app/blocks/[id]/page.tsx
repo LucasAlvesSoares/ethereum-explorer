@@ -293,38 +293,26 @@ export default function BlockDetailPage() {
         <div className="card">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Gas Information</h2>
           <div className="space-y-4">
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Gas Used:</span>
-              <span className="text-sm text-gray-900">{formatNumber(block.gas_used)}</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span className="text-sm text-gray-600 font-medium">Gas Limit:</span>
-              <span className="text-sm text-gray-900">{formatNumber(block.gas_limit)}</span>
-            </div>
-
-            {/* Gas Usage Bar */}
-            <div className="mt-4">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Gas Usage</span>
-                <span>{formatPercentage(block.gas_used, block.gas_limit)}</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
-                <div
-                  className="bg-primary-600 h-3 rounded-full transition-all duration-300"
-                  style={{
-                    width: formatPercentage(block.gas_used, block.gas_limit)
-                  }}
-                ></div>
-              </div>
-            </div>
-
             {block.base_fee_per_gas && (
               <div className="flex justify-between">
-                <span className="text-sm text-gray-600 font-medium">Base Fee:</span>
+                <span className="text-sm text-gray-600 font-medium">Base Fee Per Gas:</span>
                 <span className="text-sm text-gray-900">{formatGasPrice(block.base_fee_per_gas)}</span>
               </div>
             )}
+
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600 font-medium">Average Gas Price:</span>
+              <span className="text-sm text-gray-900">
+                {block.gas_used > 0 ? formatGasPrice(Math.floor(block.gas_used / block.transaction_count).toString()) : 'N/A'}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600 font-medium">Gas Efficiency:</span>
+              <span className="text-sm text-gray-900">
+                {((block.gas_used / block.gas_limit) * 100).toFixed(1)}% utilized
+              </span>
+            </div>
 
             {block.extra_data && block.extra_data !== '0x' && (
               <div className="flex justify-between items-start">
@@ -346,6 +334,16 @@ export default function BlockDetailPage() {
                 </div>
               </div>
             )}
+
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600 font-medium">Block Reward:</span>
+              <span className="text-sm text-gray-900">
+                {block.base_fee_per_gas ? 
+                  formatValue((BigInt(block.base_fee_per_gas) * BigInt(block.gas_used)).toString()) + ' ETH' : 
+                  'N/A'
+                }
+              </span>
+            </div>
           </div>
         </div>
       </div>
