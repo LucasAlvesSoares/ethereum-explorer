@@ -8,8 +8,15 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - **Block Explorer**: Navigate through blocks with detailed information including transactions, gas usage, and timestamps
 - **Transaction Details**: View comprehensive transaction data with status, gas fees, and execution traces
 - **Address Profiles**: Analyze address activity, balance history, and transaction patterns
-- **Search Functionality**: Global search across blocks, transactions, and addresses
+- **Universal Search**: Smart search across blocks, transactions, and addresses with automatic detection and routing
 - **Real-time Updates**: Live data streaming via WebSocket connections
+
+### ⛽ Gas Analytics
+- **Gas Price Tracking**: Real-time and historical gas price monitoring
+- **Gas Usage Analysis**: Block-level gas consumption patterns
+- **Fee Calculator**: Dynamic gas fee estimation tools
+- **Price Charts**: Interactive gas price visualization
+- **Network Congestion**: Gas usage trends and network health indicators
 
 
 ### 🔄 Transaction Flow Analysis
@@ -124,6 +131,7 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 
 ### Analytics Pages
 - **Transaction Flow** (`/transaction-flow`) - Flow analysis and visualization
+- **Gas Analytics** (`/gas-analytics`) - Gas price monitoring and analysis tools
 
 ## 🔌 API Endpoints
 
@@ -133,10 +141,15 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - `GET /api/v1/transactions` - List transactions
 - `GET /api/v1/transactions/:hash` - Get transaction details
 - `GET /api/v1/addresses/:address` - Get address information
+- `GET /api/v1/search/:query` - Universal search endpoint
 
 ### Analytics API
-- `GET /api/v1/gas/stats` - Gas price statistics
-- `GET /api/v1/flow/analyze` - Transaction flow analysis
+- `GET /api/v1/gas-analytics/current` - Current gas prices
+- `GET /api/v1/gas-analytics/history` - Historical gas data
+- `GET /api/v1/gas-analytics/calculator` - Gas fee calculations
+- `GET /api/v1/transaction-flow/:address` - Transaction flow analysis
+- `GET /api/v1/address-analytics/:address` - Address analytics
+- `GET /api/v1/transaction-path` - Transaction path analysis
 - `GET /api/v1/network/stats` - Network statistics
 
 ### WebSocket

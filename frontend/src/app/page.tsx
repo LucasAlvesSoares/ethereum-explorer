@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { Search, Activity, Blocks, Zap, Clock, Hash, User } from 'lucide-react'
 import Link from 'next/link'
-import { Block, BlocksResponse } from '@/types'
+import { useRouter } from 'next/navigation'
+import { Block, BlocksResponse, SearchResponse } from '@/types'
 import { formatHash, formatNumber, formatTimestamp, formatAddress } from '@/utils/formatting'
 
 export default function Home() {
@@ -11,6 +12,8 @@ export default function Home() {
   const [apiStatus, setApiStatus] = useState<'loading' | 'healthy' | 'error'>('loading')
   const [latestBlocks, setLatestBlocks] = useState<Block[]>([])
   const [blocksLoading, setBlocksLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const router = useRouter()
 
   useEffect(() => {
     // Check API health on component mount
@@ -39,11 +42,37 @@ export default function Home() {
     }
   }
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (searchQuery.trim()) {
-      // TODO: Implement search functionality
-      console.log('Searching for:', searchQuery)
+    if (!searchQuery.trim()) return
+
+    setSearchLoading(true)
+    
+    try {
+      const response = await fetch(`/api/v1/search/${encodeURIComponent(searchQuery.trim())}`)
+      
+      if (response.ok) {
+        const data: SearchResponse = await response.json()
+        
+        // Navigate to the first result found
+        if (data.results.block) {
+          router.push(`/blocks/${data.results.block.number || data.results.block.hash}`)
+        } else if (data.results.transaction) {
+          router.push(`/transactions/${data.results.transaction.hash}`)
+        } else if (data.results.address) {
+          router.push(`/addresses/${data.results.address.address}`)
+        }
+      } else if (response.status === 404) {
+        // Handle no results found
+        alert('No results found for your search query. Please check the format and try again.')
+      } else {
+        throw new Error('Search failed')
+      }
+    } catch (error) {
+      console.error('Search error:', error)
+      alert('Search failed. Please try again.')
+    } finally {
+      setSearchLoading(false)
     }
   }
 
@@ -71,9 +100,17 @@ export default function Home() {
             />
             <button
               type="submit"
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-primary"
+              disabled={searchLoading}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Search
+              {searchLoading ? (
+                <div className="flex items-center">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Searching...
+                </div>
+              ) : (
+                'Search'
+              )}
             </button>
           </div>
         </form>
@@ -200,12 +237,12 @@ export default function Home() {
             <p className="text-sm text-gray-600">Explore recent transactions</p>
           </Link>
           
-          <Link href="/gas-analytics" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
+          <Link href="/blocks" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">
             <div className="flex items-center mb-2">
-              <Zap className="w-5 h-5 text-blue-600 mr-2" />
-              <h3 className="font-semibold text-gray-800">Gas Analytics</h3>
+              <Blocks className="w-5 h-5 text-blue-600 mr-2" />
+              <h3 className="font-semibold text-gray-800">Blocks</h3>
             </div>
-            <p className="text-sm text-gray-600">Real-time gas prices and trends</p>
+            <p className="text-sm text-gray-600">Explore blockchain blocks</p>
           </Link>
           
           <Link href="/transaction-flow" className="block p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all">

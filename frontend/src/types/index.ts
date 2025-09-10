@@ -111,3 +111,20 @@ export interface NetworkStats {
   total_transactions?: number;
   avg_gas_price?: string;
 }
+
+export interface SearchResult {
+  type: 'block' | 'transaction' | 'address';
+  hash?: string;
+  number?: number;
+  block_number?: number;
+  address?: string;
+  url: string;
+}
+
+export interface SearchResponse {
+  results: {
+    block?: SearchResult;
+    transaction?: SearchResult;
+    address?: SearchResult;
+  };
+}
