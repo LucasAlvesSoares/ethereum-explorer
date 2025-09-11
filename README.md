@@ -18,15 +18,22 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - **Price Charts**: Interactive gas price visualization
 - **Network Congestion**: Gas usage trends and network health indicators
 
+### 🔍 MEV Analytics
+- **MEV Detection**: Identify Maximal Extractable Value (MEV) activities
+- **Suspicious Transaction Analysis**: Detect and analyze potentially malicious transactions
+- **MEV Bot Identification**: Track addresses with MEV-like behavior patterns
+- **Block-level MEV Analysis**: Comprehensive MEV activity analysis per block
+- **Network Health Monitoring**: MEV activity level indicators and network security insights
+- **Pattern Recognition**: Identify sandwich attacks, front-running, and arbitrage opportunities
 
-### 🔄 Transaction Flow Analysis
+### � Transaction Flow Analysis
 - **Flow Visualization**: Interactive transaction flow diagrams
 - **Address Clustering**: Group related addresses and identify patterns
 - **Fund Tracking**: Follow transaction paths and money flows
 - **Risk Assessment**: Identify suspicious transaction patterns
 - **Network Analysis**: Understand transaction relationships
 
-### 📈 Advanced Analytics
+### �📈 Advanced Analytics
 - **Network Statistics**: Real-time blockchain metrics and health indicators
 - **Performance Monitoring**: Track network throughput and efficiency
 - **Data Aggregation**: Historical data analysis and trend identification

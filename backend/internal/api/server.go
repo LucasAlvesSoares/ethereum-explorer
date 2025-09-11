@@ -6,6 +6,7 @@ import (
 
 	"crypto-analytics/backend/internal/config"
 	"crypto-analytics/backend/internal/ethereum"
+	"crypto-analytics/backend/internal/services"
 	"crypto-analytics/backend/internal/websocket"
 
 	"github.com/gin-gonic/gin"
@@ -89,6 +90,11 @@ func (s *Server) setupRoutes() {
 	api.GET("/transaction-flow/:address", s.GetTransactionFlow)
 	api.GET("/address-analytics/:address", s.GetAddressAnalytics)
 	api.GET("/transaction-path", s.GetTransactionPath)
+
+	// Initialize MEV Detector and register MEV analytics routes
+	mevDetector := services.NewMEVDetector(s.db)
+	mevHandler := NewMEVAnalyticsHandler(mevDetector)
+	mevHandler.RegisterMEVRoutes(api)
 }
 
 // corsMiddleware handles CORS headers

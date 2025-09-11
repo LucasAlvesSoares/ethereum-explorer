@@ -39,6 +39,9 @@ export default function RootLayout({
                   <a href="/transaction-flow" className="text-gray-500 hover:text-gray-900">
                     Flow Analysis
                   </a>
+                  <a href="/mev-analytics" className="text-gray-500 hover:text-gray-900">
+                    MEV Analytics
+                  </a>
                 </nav>
               </div>
             </div>
