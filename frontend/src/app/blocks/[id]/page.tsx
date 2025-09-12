@@ -344,7 +344,7 @@ export default function BlockDetailPage() {
               <span className="text-sm text-gray-600 font-medium">Block Reward:</span>
               <span className="text-sm text-gray-900">
                 {block.base_fee_per_gas ? 
-                  formatValue((BigInt(block.base_fee_per_gas) * BigInt(block.gas_used)).toString()) + ' ETH' : 
+                  formatValue((BigInt(block.base_fee_per_gas) * BigInt(block.gas_used)).toString()) :
                   'N/A'
                 }
               </span>
@@ -427,7 +427,7 @@ export default function BlockDetailPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatValue(tx.value)} ETH
+                      {formatValue(tx.value)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {tx.gas_used ? formatNumber(tx.gas_used) : 'N/A'}

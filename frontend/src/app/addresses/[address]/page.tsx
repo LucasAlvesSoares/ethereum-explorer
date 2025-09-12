@@ -230,7 +230,7 @@ export default function AddressDetailPage() {
             <Wallet className="w-8 h-8 text-blue-600 mr-3" />
             <div>
               <p className="text-sm text-gray-600">Balance</p>
-              <p className="text-2xl font-bold text-gray-900">{formatValue(address.balance)} ETH</p>
+              <p className="text-2xl font-bold text-gray-900">{formatValue(address.balance)}</p>
             </div>
           </div>
         </div>
@@ -293,7 +293,7 @@ export default function AddressDetailPage() {
 
             <div className="flex justify-between">
               <span className="text-sm text-gray-600 font-medium">Balance:</span>
-              <span className="text-sm text-gray-900 font-mono">{formatValue(address.balance)} ETH</span>
+              <span className="text-sm text-gray-900 font-mono">{formatValue(address.balance)}</span>
             </div>
 
             <div className="flex justify-between">
@@ -517,7 +517,7 @@ export default function AddressDetailPage() {
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className={`text-sm font-mono ${getDirectionColor(direction)}`}>
                             {direction === 'out' ? '-' : direction === 'in' ? '+' : ''}
-                            {formatValue(tx.value)} ETH
+                            {formatValue(tx.value)}
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
