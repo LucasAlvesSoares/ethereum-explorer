@@ -1,0 +1,50 @@
+[
+  {
+    "address": "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326",
+    "balance": "1000000000000000000000",
+    "nonce": 42,
+    "is_contract": false,
+    "contract_creator": null,
+    "creation_transaction": null,
+    "first_seen_block": 20849900,
+    "last_seen_block": 20850002,
+    "transaction_count": 150,
+    "label": "Demo Whale Address"
+  },
+  {
+    "address": "0xA0b86a33E6a0dE2a7c4D1A7F6Bc2B9e0B3e5C8a3",
+    "balance": "500000000000000000000",
+    "nonce": 25,
+    "is_contract": true,
+    "contract_creator": "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326",
+    "creation_transaction": "0xdef456abc789012345678901234567890123456789012345678901234567890123",
+    "first_seen_block": 20849850,
+    "last_seen_block": 20850001,
+    "transaction_count": 500,
+    "label": "Demo DeFi Contract"
+  },
+  {
+    "address": "0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5",
+    "balance": "2500000000000000000000",
+    "nonce": 125,
+    "is_contract": false,
+    "contract_creator": null,
+    "creation_transaction": null,
+    "first_seen_block": 20849800,
+    "last_seen_block": 20850002,
+    "transaction_count": 280,
+    "label": "Demo Miner Address"
+  },
+  {
+    "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    "balance": "0",
+    "nonce": 1,
+    "is_contract": true,
+    "contract_creator": "0x1f9090aaE28b8a3dCeaDf281B0F12828e676c326",
+    "creation_transaction": "0x789abc123def456789012345678901234567890123456789012345678901234567",
+    "first_seen_block": 20849900,
+    "last_seen_block": 20850000,
+    "transaction_count": 25000,
+    "label": "Demo USDT Contract"
+  }
+]

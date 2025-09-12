@@ -1,0 +1,62 @@
+[
+  {
+    "block_number": 20850000,
+    "timestamp": "2024-09-11T15:30:00Z",
+    "base_fee_per_gas": 15000000000,
+    "slow_gas_price": 18000000000,
+    "standard_gas_price": 22000000000,
+    "fast_gas_price": 28000000000,
+    "slow_wait_time": 300,
+    "standard_wait_time": 180,
+    "fast_wait_time": 60,
+    "network_utilization": 75.5
+  },
+  {
+    "block_number": 20850001,
+    "timestamp": "2024-09-11T15:30:12Z",
+    "base_fee_per_gas": 16000000000,
+    "slow_gas_price": 19000000000,
+    "standard_gas_price": 23000000000,
+    "fast_gas_price": 29000000000,
+    "slow_wait_time": 285,
+    "standard_wait_time": 165,
+    "fast_wait_time": 55,
+    "network_utilization": 80.2
+  },
+  {
+    "block_number": 20850002,
+    "timestamp": "2024-09-11T15:30:24Z",
+    "base_fee_per_gas": 17500000000,
+    "slow_gas_price": 20500000000,
+    "standard_gas_price": 25000000000,
+    "fast_gas_price": 32000000000,
+    "slow_wait_time": 270,
+    "standard_wait_time": 150,
+    "fast_wait_time": 45,
+    "network_utilization": 85.7
+  },
+  {
+    "block_number": 20849999,
+    "timestamp": "2024-09-11T15:29:48Z",
+    "base_fee_per_gas": 14200000000,
+    "slow_gas_price": 17200000000,
+    "standard_gas_price": 21000000000,
+    "fast_gas_price": 26500000000,
+    "slow_wait_time": 320,
+    "standard_wait_time": 195,
+    "fast_wait_time": 70,
+    "network_utilization": 68.3
+  },
+  {
+    "block_number": 20849998,
+    "timestamp": "2024-09-11T15:29:36Z",
+    "base_fee_per_gas": 13800000000,
+    "slow_gas_price": 16800000000,
+    "standard_gas_price": 20500000000,
+    "fast_gas_price": 25800000000,
+    "slow_wait_time": 340,
+    "standard_wait_time": 210,
+    "fast_wait_time": 80,
+    "network_utilization": 62.1
+  }
+]

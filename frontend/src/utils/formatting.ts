@@ -69,3 +69,24 @@ export const formatPercentage = (value: number, total: number): string => {
   if (total === 0) return '0%';
   return `${((value / total) * 100).toFixed(1)}%`;
 };
+
+export const formatEther = (value: string | number): string => {
+  // Convert wei to ETH (1 ETH = 10^18 wei)
+  const valueStr = typeof value === 'number' ? value.toString() : value;
+  const eth = parseFloat(valueStr) / Math.pow(10, 18);
+  if (eth === 0) return '0';
+  if (eth < 0.000001) return '<0.000001';
+  if (eth < 1) return eth.toFixed(6);
+  return eth.toFixed(4);
+};
+
+export const formatUnits = (value: string | number, decimals: number = 18): string => {
+  // Convert value to string and handle decimal conversion
+  const valueStr = typeof value === 'number' ? value.toString() : value;
+  const converted = parseFloat(valueStr) / Math.pow(10, decimals);
+  
+  if (converted === 0) return '0';
+  if (converted < 0.000001) return '<0.000001';
+  if (converted < 1) return converted.toFixed(6);
+  return converted.toFixed(4);
+};

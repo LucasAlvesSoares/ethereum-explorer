@@ -15,15 +15,16 @@ import (
 
 // Server represents the API server
 type Server struct {
-	db        *sql.DB
-	ethClient *ethereum.Client
-	config    *config.Config
-	router    *gin.Engine
-	wsHub     *websocket.Hub
+	db          *sql.DB
+	ethClient   *ethereum.Client
+	config      *config.Config
+	router      *gin.Engine
+	wsHub       *websocket.Hub
+	dataService services.DataService
 }
 
 // NewServer creates a new API server instance
-func NewServer(db *sql.DB, ethClient *ethereum.Client, cfg *config.Config) *Server {
+func NewServer(db *sql.DB, ethClient *ethereum.Client, cfg *config.Config, dataService services.DataService) *Server {
 	// Set Gin mode based on environment
 	if cfg.Environment == "production" || cfg.Environment == "staging" {
 		gin.SetMode(gin.ReleaseMode)
@@ -41,11 +42,12 @@ func NewServer(db *sql.DB, ethClient *ethereum.Client, cfg *config.Config) *Serv
 	go wsHub.Run()
 
 	server := &Server{
-		db:        db,
-		ethClient: ethClient,
-		config:    cfg,
-		router:    router,
-		wsHub:     wsHub,
+		db:          db,
+		ethClient:   ethClient,
+		config:      cfg,
+		router:      router,
+		wsHub:       wsHub,
+		dataService: dataService,
 	}
 
 	server.setupRoutes()

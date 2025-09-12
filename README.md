@@ -19,12 +19,13 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - **Network Congestion**: Gas usage trends and network health indicators
 
 ### 🔍 MEV Analytics
-- **MEV Detection**: Identify Maximal Extractable Value (MEV) activities
-- **Suspicious Transaction Analysis**: Detect and analyze potentially malicious transactions
-- **MEV Bot Identification**: Track addresses with MEV-like behavior patterns
-- **Block-level MEV Analysis**: Comprehensive MEV activity analysis per block
-- **Network Health Monitoring**: MEV activity level indicators and network security insights
-- **Pattern Recognition**: Identify sandwich attacks, front-running, and arbitrage opportunities
+- **MEV Detection Engine**: Advanced pattern recognition for sandwich attacks, front-running, back-running, arbitrage, and liquidations
+- **Confidence Scoring**: AI-powered confidence assessment (0-100%) for MEV activity classification
+- **Real-time Dashboard**: 24h MEV statistics, active bot tracking, and activity breakdowns
+- **MEV Bot Profiling**: Identify and track most profitable MEV addresses with success rates
+- **Interactive Filtering**: Filter activities by MEV type, confidence level, and time range
+- **Historical Analysis**: Track MEV trends and network impact over time
+- **Value Extraction Metrics**: Monitor total value extracted and MEV impact on network
 
 ### � Transaction Flow Analysis
 - **Flow Visualization**: Interactive transaction flow diagrams
@@ -112,8 +113,14 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
    # Copy environment files
    cp backend/.env.example backend/.env
    
-   # Configure your Ethereum RPC URL in backend/.env
-   ETHEREUM_RPC_URL=https://your-ethereum-node-url
+   # Configure your setup in backend/.env
+   # For quick start with demo data (recommended):
+   DEMO_MODE=true
+   DEMO_DATA_PATH=./data
+   
+   # For live blockchain data:
+   DEMO_MODE=false
+   ETHEREUM_RPC=https://your-ethereum-node-url
    ```
 
 3. **Start the development environment**
@@ -125,6 +132,39 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
    - Frontend: http://localhost:3000
    - Backend API: http://localhost:8080
    - Database: localhost:5432
+
+## 🎭 Demo Mode vs Live Mode
+
+The platform supports two operational modes:
+
+### 🎬 Demo Mode (Default)
+- **Quick Start**: No external dependencies required
+- **Sample Data**: Pre-loaded with realistic blockchain data
+- **Development Friendly**: Perfect for testing and development
+- **Instant Setup**: Works out of the box
+
+```bash
+# Enable demo mode in backend/.env
+DEMO_MODE=true
+DEMO_DATA_PATH=./data
+```
+
+### 🌐 Live Mode
+- **Real Data**: Connects to actual Ethereum network
+- **Real-time Updates**: Live blockchain data ingestion
+- **Production Ready**: Full feature set with live data
+- **External Dependencies**: Requires Ethereum RPC endpoint
+
+```bash
+# Enable live mode in backend/.env
+DEMO_MODE=false
+ETHEREUM_RPC=https://mainnet.infura.io/v3/your-key
+```
+
+### Mode Switching
+- Use the mode selector in the application header to view current mode
+- Backend restart required to change modes
+- Demo data is automatically seeded on first run
 
 ## 📱 Application Pages
 
@@ -139,6 +179,7 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 ### Analytics Pages
 - **Transaction Flow** (`/transaction-flow`) - Flow analysis and visualization
 - **Gas Analytics** (`/gas-analytics`) - Gas price monitoring and analysis tools
+- **MEV Analytics** (`/mev-analytics`) - MEV detection, bot tracking, and activity analysis
 
 ## 🔌 API Endpoints
 
@@ -154,6 +195,9 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - `GET /api/v1/gas-analytics/current` - Current gas prices
 - `GET /api/v1/gas-analytics/history` - Historical gas data
 - `GET /api/v1/gas-analytics/calculator` - Gas fee calculations
+- `GET /api/v1/mev-analytics/activities` - MEV activities with filtering
+- `GET /api/v1/mev-analytics/stats` - MEV statistics and aggregated data
+- `GET /api/v1/mev-analytics/activities/:id` - Individual MEV activity details
 - `GET /api/v1/transaction-flow/:address` - Transaction flow analysis
 - `GET /api/v1/address-analytics/:address` - Address analytics
 - `GET /api/v1/transaction-path` - Transaction path analysis
@@ -169,6 +213,13 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 - `transactions` - Transaction records
 - `addresses` - Address information
 - `gas_prices` - Historical gas price data
+- `mev_activities` - MEV detection results and analysis
+
+### Demo Data
+- `backend/data/demo_blocks.json` - Sample blockchain block data
+- `backend/data/demo_transactions.json` - Sample transaction data with MEV patterns
+- `backend/data/demo_addresses.json` - Sample address data including MEV bots
+- `backend/data/demo_gas_prices.json` - Historical gas price data for analytics
 
 ## 🔧 Configuration
 
@@ -176,17 +227,23 @@ A comprehensive blockchain analytics platform with real-time data processing, ad
 
 #### Backend (.env)
 ```bash
+# Application Mode
+DEMO_MODE=true
+DEMO_DATA_PATH=./data
+
 # Database
 DATABASE_URL=postgres://user:password@localhost:5432/crypto_analytics
 
 # Ethereum
-ETHEREUM_RPC_URL=https://mainnet.infura.io/v3/your-key
+ETHEREUM_RPC=https://mainnet.infura.io/v3/your-key
 
 # Redis
 REDIS_URL=redis://localhost:6379
 
 # Server
 PORT=8080
+LOG_LEVEL=info
+ENVIRONMENT=local
 ```
 
 ## 🚀 Deployment
