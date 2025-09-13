@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLatestBlock } from '@/contexts/RealTimeContext'
-import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
+import { formatDistanceToNow } from 'date-fns'
 import { formatNumber, formatGas } from '@/utils/formatting'
 
 interface Block {
