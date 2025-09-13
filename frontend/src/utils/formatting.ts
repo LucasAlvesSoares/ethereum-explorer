@@ -90,3 +90,16 @@ export const formatUnits = (value: string | number, decimals: number = 18): stri
   if (converted < 1) return converted.toFixed(6);
   return converted.toFixed(4);
 };
+
+export const formatGas = (gas: number | string): string => {
+  // Format gas values with proper units
+  const gasNum = typeof gas === 'string' ? parseInt(gas) : gas;
+  
+  if (gasNum >= 1000000) {
+    return `${(gasNum / 1000000).toFixed(2)}M`;
+  } else if (gasNum >= 1000) {
+    return `${(gasNum / 1000).toFixed(1)}K`;
+  } else {
+    return gasNum.toString();
+  }
+};

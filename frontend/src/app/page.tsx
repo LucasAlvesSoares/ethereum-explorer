@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Block, BlocksResponse, SearchResponse } from '@/types'
 import { formatHash, formatNumber, formatTimestamp, formatAddress } from '@/utils/formatting'
+import RealTimeBlocksFeed from '@/components/RealTimeBlocksFeed'
+import RealTimeTransactionsFeed from '@/components/RealTimeTransactionsFeed'
 
 export default function Home() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -134,10 +136,19 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Latest Blocks Section */}
+      {/* Real-time Activity */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-semibold text-gray-900 mb-6">Real-time Activity</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RealTimeBlocksFeed />
+          <RealTimeTransactionsFeed />
+        </div>
+      </div>
+
+      {/* Latest Blocks Section (Fallback) */}
       <div className="mb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-semibold text-gray-900">Latest Blocks</h2>
+          <h2 className="text-2xl font-semibold text-gray-900">Recent Blocks</h2>
           <Link href="/blocks" className="text-primary-600 hover:text-primary-800 text-sm font-medium">
             View all blocks →
           </Link>
