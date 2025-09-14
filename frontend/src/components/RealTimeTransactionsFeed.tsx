@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useLatestTransaction } from '@/contexts/RealTimeContext'
-import { formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow'
 import { formatNumber, formatValue, formatAddress, formatGasPrice } from '@/utils/formatting'
 
 interface Transaction {

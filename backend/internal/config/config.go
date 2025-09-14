@@ -7,38 +7,24 @@ import (
 
 // Config holds all configuration for the application
 type Config struct {
-	Port         string
-	DatabaseURL  string
-	EthereumRPC  string
-	LogLevel     string
-	Environment  string
-	RedisURL     string
-	DemoMode     bool
-	DemoDataPath string
+	Port        string
+	DatabaseURL string
+	EthereumRPC string
+	LogLevel    string
+	Environment string
+	RedisURL    string
 }
 
 // Load reads configuration from environment variables
 func Load() *Config {
 	return &Config{
-		Port:         getEnv("PORT", "8080"),
-		DatabaseURL:  getEnv("DATABASE_URL", "postgres://postgres:password@localhost:5432/crypto_analytics?sslmode=disable"),
-		EthereumRPC:  getEnv("ETHEREUM_RPC", "https://mainnet.infura.io/v3/YOUR_PROJECT_ID"),
-		LogLevel:     getEnv("LOG_LEVEL", "info"),
-		Environment:  getEnv("ENVIRONMENT", "local"),
-		RedisURL:     getEnv("REDIS_URL", "redis://localhost:6379"),
-		DemoMode:     getEnvAsBool("DEMO_MODE", false),
-		DemoDataPath: getEnv("DEMO_DATA_PATH", "./data/demo"),
+		Port:        getEnv("PORT", "8080"),
+		DatabaseURL: getEnv("DATABASE_URL", "postgres://postgres:password@localhost:5432/crypto_analytics?sslmode=disable"),
+		EthereumRPC: getEnv("ETHEREUM_RPC", "https://mainnet.infura.io/v3/YOUR_PROJECT_ID"),
+		LogLevel:    getEnv("LOG_LEVEL", "info"),
+		Environment: getEnv("ENVIRONMENT", "local"),
+		RedisURL:    getEnv("REDIS_URL", "redis://localhost:6379"),
 	}
-}
-
-// IsDemoMode returns true if the application is running in demo mode
-func (c *Config) IsDemoMode() bool {
-	return c.DemoMode
-}
-
-// IsLiveMode returns true if the application is running in live mode
-func (c *Config) IsLiveMode() bool {
-	return !c.DemoMode
 }
 
 // getEnv gets an environment variable with a fallback value

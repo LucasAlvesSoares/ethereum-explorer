@@ -93,10 +93,6 @@ func (s *Server) setupRoutes() {
 	api.GET("/address-analytics/:address", s.GetAddressAnalytics)
 	api.GET("/transaction-path", s.GetTransactionPath)
 
-	// Initialize MEV Detector and register MEV analytics routes
-	mevDetector := services.NewMEVDetector(s.db)
-	mevHandler := NewMEVAnalyticsHandler(mevDetector)
-	mevHandler.RegisterMEVRoutes(api)
 }
 
 // corsMiddleware handles CORS headers
@@ -141,13 +137,12 @@ func (s *Server) healthCheck(c *gin.Context) {
 		logrus.Warnf("Database health check failed: %v", err)
 	}
 
-	// Check Ethereum connection (optional in demo mode)
+	// Check Ethereum connection
 	if s.ethClient != nil {
 		if s.ethClient.IsConnected() {
 			if _, err := s.ethClient.GetNetworkID(); err != nil {
 				response["ethereum"] = "disconnected"
 				logrus.Warnf("Ethereum health check failed: %v", err)
-				// Don't mark as unhealthy in demo mode - just log the warning
 			} else {
 				response["ethereum"] = "connected"
 			}

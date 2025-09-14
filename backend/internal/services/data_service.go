@@ -2,14 +2,9 @@ package services
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"path/filepath"
 	"strconv"
 	"time"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Block represents a blockchain block
@@ -146,76 +141,9 @@ func NewLiveDataService(db *sql.DB) DataService {
 	}
 }
 
-// DemoDataService implements DataService using JSON files
-type DemoDataService struct {
-	db        *sql.DB
-	dataPath  string
-	mode      string
-	blocks    []Block
-	txs       []Transaction
-	addresses []Address
-	gasPrices []GasPrice
-}
-
-// NewDemoDataService creates a new demo data service
-func NewDemoDataService(db *sql.DB, dataPath string) DataService {
-	service := &DemoDataService{
-		db:       db,
-		dataPath: dataPath,
-		mode:     "demo",
-	}
-
-	// Load demo data
-	if err := service.loadDemoData(); err != nil {
-		logrus.Warnf("Failed to load demo data: %v", err)
-	}
-
-	return service
-}
-
-// loadDemoData loads demo data from JSON files
-func (d *DemoDataService) loadDemoData() error {
-	// Load blocks
-	if data, err := ioutil.ReadFile(filepath.Join(d.dataPath, "demo_blocks.json")); err == nil {
-		if err := json.Unmarshal(data, &d.blocks); err != nil {
-			logrus.Warnf("Failed to parse demo blocks: %v", err)
-		}
-	}
-
-	// Load transactions
-	if data, err := ioutil.ReadFile(filepath.Join(d.dataPath, "demo_transactions.json")); err == nil {
-		if err := json.Unmarshal(data, &d.txs); err != nil {
-			logrus.Warnf("Failed to parse demo transactions: %v", err)
-		}
-	}
-
-	// Load addresses
-	if data, err := ioutil.ReadFile(filepath.Join(d.dataPath, "demo_addresses.json")); err == nil {
-		if err := json.Unmarshal(data, &d.addresses); err != nil {
-			logrus.Warnf("Failed to parse demo addresses: %v", err)
-		}
-	}
-
-	// Load gas prices
-	if data, err := ioutil.ReadFile(filepath.Join(d.dataPath, "demo_gas_prices.json")); err == nil {
-		if err := json.Unmarshal(data, &d.gasPrices); err != nil {
-			logrus.Warnf("Failed to parse demo gas prices: %v", err)
-		}
-	}
-
-	logrus.Infof("Loaded demo data: %d blocks, %d transactions, %d addresses, %d gas prices",
-		len(d.blocks), len(d.txs), len(d.addresses), len(d.gasPrices))
-
-	return nil
-}
-
 // GetMode returns the current mode
 func (l *LiveDataService) GetMode() string {
 	return l.mode
-}
-
-func (d *DemoDataService) GetMode() string {
-	return d.mode
 }
 
 // Implement LiveDataService methods
@@ -476,7 +404,7 @@ func (l *LiveDataService) SearchByQuery(query string) (*SearchResult, error) {
 	result := &SearchResult{Mode: l.mode}
 
 	// Try to find as block number
-	if blockNum, err := strconv.ParseInt(query, 10, 64); err == nil {
+	if _, err := strconv.ParseInt(query, 10, 64); err == nil {
 		if block, err := l.GetBlock(query); err == nil {
 			result.Block = block
 			return result, nil
@@ -537,179 +465,4 @@ func (l *LiveDataService) GetGasPrices(hours int) ([]GasPrice, error) {
 	}
 
 	return gasPrices, nil
-}
-
-// Implement DemoDataService methods
-func (d *DemoDataService) GetBlocks(page, limit int) (*BlocksResponse, error) {
-	start := (page - 1) * limit
-	end := start + limit
-
-	var blocks []Block
-	if start < len(d.blocks) {
-		if end > len(d.blocks) {
-			end = len(d.blocks)
-		}
-		blocks = d.blocks[start:end]
-	}
-
-	return &BlocksResponse{
-		Blocks:     blocks,
-		TotalCount: int64(len(d.blocks)),
-		Page:       page,
-		Limit:      limit,
-		Mode:       d.mode,
-	}, nil
-}
-
-func (d *DemoDataService) GetBlock(identifier string) (*Block, error) {
-	// Check if identifier is numeric (block number) or hash
-	if blockNum, err := strconv.ParseInt(identifier, 10, 64); err == nil {
-		for _, block := range d.blocks {
-			if block.Number == blockNum {
-				return &block, nil
-			}
-		}
-	} else {
-		for _, block := range d.blocks {
-			if block.Hash == identifier {
-				return &block, nil
-			}
-		}
-	}
-
-	return nil, fmt.Errorf("block not found")
-}
-
-func (d *DemoDataService) GetTransactions(page, limit int) (*TransactionsResponse, error) {
-	start := (page - 1) * limit
-	end := start + limit
-
-	var transactions []Transaction
-	if start < len(d.txs) {
-		if end > len(d.txs) {
-			end = len(d.txs)
-		}
-		transactions = d.txs[start:end]
-	}
-
-	return &TransactionsResponse{
-		Transactions: transactions,
-		TotalCount:   int64(len(d.txs)),
-		Page:         page,
-		Limit:        limit,
-		Mode:         d.mode,
-	}, nil
-}
-
-func (d *DemoDataService) GetTransaction(hash string) (*Transaction, error) {
-	for _, tx := range d.txs {
-		if tx.Hash == hash {
-			return &tx, nil
-		}
-	}
-
-	return nil, fmt.Errorf("transaction not found")
-}
-
-func (d *DemoDataService) GetAddress(address string) (*AddressResponse, error) {
-	for _, addr := range d.addresses {
-		if addr.Address == address {
-			return &AddressResponse{
-				Address: addr,
-				Mode:    d.mode,
-			}, nil
-		}
-	}
-
-	// Address not found in demo data, create minimal response
-	addr := Address{
-		Address:          address,
-		Balance:          "0",
-		Nonce:            0,
-		IsContract:       false,
-		TransactionCount: 0,
-		Tags:             []string{},
-	}
-
-	return &AddressResponse{
-		Address: addr,
-		Mode:    d.mode,
-	}, nil
-}
-
-func (d *DemoDataService) GetAddressTransactions(address string, page, limit int) (*TransactionsResponse, error) {
-	var addressTxs []Transaction
-	for _, tx := range d.txs {
-		if tx.FromAddress == address || (tx.ToAddress != nil && *tx.ToAddress == address) {
-			addressTxs = append(addressTxs, tx)
-		}
-	}
-
-	start := (page - 1) * limit
-	end := start + limit
-
-	var transactions []Transaction
-	if start < len(addressTxs) {
-		if end > len(addressTxs) {
-			end = len(addressTxs)
-		}
-		transactions = addressTxs[start:end]
-	}
-
-	return &TransactionsResponse{
-		Transactions: transactions,
-		TotalCount:   int64(len(addressTxs)),
-		Page:         page,
-		Limit:        limit,
-		Mode:         d.mode,
-	}, nil
-}
-
-func (d *DemoDataService) SearchByQuery(query string) (*SearchResult, error) {
-	result := &SearchResult{Mode: d.mode}
-
-	// Try to find as block number
-	if blockNum, err := strconv.ParseInt(query, 10, 64); err == nil {
-		if block, err := d.GetBlock(query); err == nil {
-			result.Block = block
-			return result, nil
-		}
-		_ = blockNum // Use the variable to avoid compiler error
-	}
-
-	// Try to find as block hash (66 chars with 0x prefix)
-	if len(query) == 66 && query[:2] == "0x" {
-		if block, err := d.GetBlock(query); err == nil {
-			result.Block = block
-			return result, nil
-		}
-		if tx, err := d.GetTransaction(query); err == nil {
-			result.Transaction = tx
-			return result, nil
-		}
-	}
-
-	// Try to find as address (42 chars with 0x prefix)
-	if len(query) == 42 && query[:2] == "0x" {
-		if addr, err := d.GetAddress(query); err == nil {
-			result.Address = &addr.Address
-			return result, nil
-		}
-	}
-
-	return nil, fmt.Errorf("no results found")
-}
-
-func (d *DemoDataService) GetGasPrices(hours int) ([]GasPrice, error) {
-	// Return recent gas prices from demo data
-	var recentPrices []GasPrice
-	cutoff := time.Now().Add(-time.Duration(hours) * time.Hour)
-
-	for _, gp := range d.gasPrices {
-		if gp.Timestamp.After(cutoff) {
-			recentPrices = append(recentPrices, gp)
-		}
-	}
-
-	return recentPrices, nil
 }

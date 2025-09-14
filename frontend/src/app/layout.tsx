@@ -3,7 +3,6 @@
 import React from 'react'
 import { Inter } from 'next/font/google'
 import Link from 'next/link'
-import ModeSelector from '@/components/ModeSelector'
 import RealTimeStatus from '@/components/RealTimeStatus'
 import { RealTimeProvider } from '@/contexts/RealTimeContext'
 import './globals.css'
@@ -43,11 +42,7 @@ export default function RootLayout({
                       <Link href="/transaction-flow" className="text-gray-500 hover:text-gray-900">
                         Flow Analysis
                       </Link>
-                      <Link href="/mev-analytics" className="text-gray-500 hover:text-gray-900">
-                        MEV Analytics
-                      </Link>
                     </nav>
-                    <ModeSelector />
                   </div>
                 </div>
               </div>
