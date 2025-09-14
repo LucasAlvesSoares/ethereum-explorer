@@ -55,6 +55,7 @@ coverage/
 *.test
 *.out
 go.work
+crypto-analytics
 
 # Database files
 *.db
